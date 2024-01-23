@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd $(dirname "${BASH_SOURCE[0]}")
+PRESET="linux-debug"
+if [ $1 -d "build/$PRESET-wayland" ];then
+    PRESET="$PRESET-wayland"
+fi
+cmake --build "build/$PRESET"

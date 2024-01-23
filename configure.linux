@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PRESET="linux-debug"
+if [ $XDG_SESSION_TYPE -eq "wayland" ];then
+    PRESET="linux-debug-wayland"
+fi
+
+cmake . --preset $PRESET -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+mv build/$PRESET/compile_commands.json .
