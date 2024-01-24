@@ -15,10 +15,11 @@ if (LINUX)
 	add_link_options(-fsanitize=address)
 endif()
 
+set(GLM_ENABLE_CXX_20 "ON")
 FetchContent_Declare(
 	glm
 	GIT_REPOSITORY	https://github.com/g-truc/glm.git
-	GIT_TAG 	bf71a834948186f4097caa076cd2663c69a10e1e #refs/tags/1.0.0
+	GIT_TAG  bf71a834948186f4097caa076cd2663c69a10e1e #refs/tags/1.0.0
 )
 FetchContent_MakeAvailable(glm)
 

@@ -1,6 +1,5 @@
 #include "glm/common.hpp"
 #include "glm/geometric.hpp"
-#include "glm/gtx/dual_quaternion.hpp"
 #include "plover-raycaster.h"
 #include "plover/plover.h"
 #include <cstdint>
@@ -112,8 +111,15 @@ internal_func void handleInput(GameState *state) {
 }
 
 internal_func void drawUI(GameState *state) {
-	handles.UI_Text(Vec4(1.0, 1.0, 1.0, 1.0), UVec2(16, 26),
-					"It's drawing! current time: %d", state->deltaTime);
+	Vec4 color = Vec4(0.914, 0.831, 0.612, 1.0);
+	handles.UI_Text(color, UVec2(16, 26), "It's drawing! current time: %.4f",
+					state->deltaTime);
+
+	// Draw frame
+	handles.UI_Rect(color, UVec2(10, 10), UVec2(1260, 10));
+	handles.UI_Rect(color, UVec2(10, 10), UVec2(10, 700));
+	handles.UI_Rect(color, UVec2(1260, 10), UVec2(10, 700));
+	handles.UI_Rect(color, UVec2(10, 700), UVec2(1260, 10));
 }
 
 // Default loop on plover
