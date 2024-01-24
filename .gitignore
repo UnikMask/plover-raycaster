@@ -1,3 +1,7 @@
 */build/
 */.cache/
 */.settings
+.cache/
+build/
+assets.plv
+compile_commands.json
