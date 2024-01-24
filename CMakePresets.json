@@ -94,7 +94,7 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "GLFW_USE_WAYLAND": "1"
+                "GLFW_USE_WAYLAND": "ON"
             },
             "condition": {
                 "type": "equals",

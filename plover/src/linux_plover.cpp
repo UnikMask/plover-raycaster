@@ -1,21 +1,21 @@
-#include <plover/plover.h>
 #include "linux_plover.h"
+#include <plover/plover.h>
 
 #include "Renderer.h"
+#include "instrument.h"
 #include "plover/plover.h"
 #include "plover_int.h"
 #include "ttfRenderer.h"
-#include "instrument.h"
 
 #include <cstddef>
 #include <cstdlib>
 #include <dlfcn.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <pthread.h>
 
-#define LINUX_GAME_SO "../libProjectG.so"
+#define LINUX_GAME_SO "../libPloverRaycaster.so"
 #define GAME_UPDATE_RENDER_FUNC "gameUpdateAndRender"
 
 // OS-Independent Wrappers

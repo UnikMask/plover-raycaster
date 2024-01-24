@@ -1,8 +1,11 @@
 #!/bin/env bash
 
-if [ $PRESET -eq "" ]; then
-    PRESET="linux-debug"
+cd $(dirname ${BASH_SOURCE[0]})
+
+PRESET="linux-debug"
+if [ -d "build/linux-debug-wayland" ]; then
+    PRESET="linux-debug-wayland"
 fi
 
-cd $(dirname "${BASH_SOURCE[0]}/build/$PRESET/plover")
+cd build/$PRESET/plover
 ./plover

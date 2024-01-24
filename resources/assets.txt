@@ -1,0 +1,5 @@
+models/rect.obj
+textures/floor.png
+textures/normal.jpg
+textures/sphere.png
+textures/wall.png

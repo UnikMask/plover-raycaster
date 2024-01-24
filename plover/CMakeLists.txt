@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 project("plover")
 
 include(GNUInstallDirs)
+include(FetchContent)
 
 if (WIN32)
         message(STATUS ">>> WIN32")
@@ -25,12 +26,25 @@ if (LINUX)
 endif()
 
 
+# Dependencies
 set(Vulkan_LIBRARY $ENV{Vulkan_LIBRARY})
 set(FREETYPE_DIR $ENV{Freetype_DIR})
 find_package(Vulkan REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(glm REQUIRED)
-find_package(glfw3 3.3 REQUIRED)
+
+FetchContent_Declare(
+    glm 
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e
+)
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG e2c92645460f680fd272fd2eed591efb2be7dc31
+)
+FetchContent_MakeAvailable(glfw)
+FetchContent_MakeAvailable(glm)
+
 
 add_executable(
     ${PROJECT_NAME}
@@ -63,8 +77,6 @@ target_include_directories(${PROJECT_NAME}
 	PUBLIC include/
 	PUBLIC ../lapwing/include
 	PUBLIC ${Vulkan_INCLUDE_DIRS}
-	PUBLIC libraries/glfw/include
-	PUBLIC libraries/glm/include
 	PUBLIC libraries/header_libs/include
 	PUBLIC ${FREETYPE_INCLUDE_DIRS}
 )

@@ -1,0 +1,3 @@
+#!/bin/bash
+cmake . --preset "linux-debug" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+mv build/linux-debug/compile_commands.json .

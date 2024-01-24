@@ -1,0 +1,44 @@
+[
+{
+  "directory": "/home/alexa/gitrepos/plover-raycaster/lapwing/build/linux-debug",
+  "command": "/sbin/clang++ -I/home/alexa/gitrepos/plover-raycaster/lapwing/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/header_libs/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm -g -std=gnu++17 -o CMakeFiles/lapwing.dir/src/lapwing.cpp.o -c /home/alexa/gitrepos/plover-raycaster/lapwing/src/lapwing.cpp",
+  "file": "/home/alexa/gitrepos/plover-raycaster/lapwing/src/lapwing.cpp",
+  "output": "CMakeFiles/lapwing.dir/src/lapwing.cpp.o"
+},
+{
+  "directory": "/home/alexa/gitrepos/plover-raycaster/lapwing/build/linux-debug",
+  "command": "/sbin/clang++ -I/home/alexa/gitrepos/plover-raycaster/lapwing/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/header_libs/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm -g -std=gnu++17 -o CMakeFiles/lapwing.dir/src/reader.cpp.o -c /home/alexa/gitrepos/plover-raycaster/lapwing/src/reader.cpp",
+  "file": "/home/alexa/gitrepos/plover-raycaster/lapwing/src/reader.cpp",
+  "output": "CMakeFiles/lapwing.dir/src/reader.cpp.o"
+},
+{
+  "directory": "/home/alexa/gitrepos/plover-raycaster/lapwing/build/linux-debug",
+  "command": "/sbin/clang++ -I/home/alexa/gitrepos/plover-raycaster/lapwing/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/header_libs/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm -g -std=gnu++17 -o CMakeFiles/lapwing.dir/src/endian.cpp.o -c /home/alexa/gitrepos/plover-raycaster/lapwing/src/endian.cpp",
+  "file": "/home/alexa/gitrepos/plover-raycaster/lapwing/src/endian.cpp",
+  "output": "CMakeFiles/lapwing.dir/src/endian.cpp.o"
+},
+{
+  "directory": "/home/alexa/gitrepos/plover-raycaster/lapwing/build/linux-debug",
+  "command": "/sbin/clang++ -I/home/alexa/gitrepos/plover-raycaster/lapwing/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/header_libs/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm -g -std=gnu++17 -o CMakeFiles/lapwing.dir/src/hasher.cpp.o -c /home/alexa/gitrepos/plover-raycaster/lapwing/src/hasher.cpp",
+  "file": "/home/alexa/gitrepos/plover-raycaster/lapwing/src/hasher.cpp",
+  "output": "CMakeFiles/lapwing.dir/src/hasher.cpp.o"
+},
+{
+  "directory": "/home/alexa/gitrepos/plover-raycaster/lapwing/build/linux-debug",
+  "command": "/sbin/clang++ -I/home/alexa/gitrepos/plover-raycaster/lapwing/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/header_libs/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm -g -std=gnu++17 -o CMakeFiles/lapwing.dir/src/writer.cpp.o -c /home/alexa/gitrepos/plover-raycaster/lapwing/src/writer.cpp",
+  "file": "/home/alexa/gitrepos/plover-raycaster/lapwing/src/writer.cpp",
+  "output": "CMakeFiles/lapwing.dir/src/writer.cpp.o"
+},
+{
+  "directory": "/home/alexa/gitrepos/plover-raycaster/lapwing/build/linux-debug",
+  "command": "/sbin/clang++ -I/home/alexa/gitrepos/plover-raycaster/lapwing/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/header_libs/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm -g -std=gnu++17 -o CMakeFiles/lapwing.dir/src/file_utils.cpp.o -c /home/alexa/gitrepos/plover-raycaster/lapwing/src/file_utils.cpp",
+  "file": "/home/alexa/gitrepos/plover-raycaster/lapwing/src/file_utils.cpp",
+  "output": "CMakeFiles/lapwing.dir/src/file_utils.cpp.o"
+},
+{
+  "directory": "/home/alexa/gitrepos/plover-raycaster/lapwing/build/linux-debug",
+  "command": "/sbin/clang -I/home/alexa/gitrepos/plover-raycaster/lapwing/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/header_libs/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm/include -I/home/alexa/gitrepos/plover-raycaster/lapwing/libraries/glm -g -o CMakeFiles/lapwing.dir/src/lz4.c.o -c /home/alexa/gitrepos/plover-raycaster/lapwing/src/lz4.c",
+  "file": "/home/alexa/gitrepos/plover-raycaster/lapwing/src/lz4.c",
+  "output": "CMakeFiles/lapwing.dir/src/lz4.c.o"
+}
+]
