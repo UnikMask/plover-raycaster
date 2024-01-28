@@ -40,8 +40,14 @@ add_custom_target(copy_resources ALL
     ${PROJECT_BINARY_DIR}/resources
     COMMENT "Copy resources into binary's directory")
 
+add_custom_target ( compile_tags ALL
+    COMMAND ctags -R --c++-kinds=+p --fields=+iaS --extra=+q . 
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Compiling project tags")
+
 add_dependencies(${PROJECT_NAME} compile_shaders)
 add_dependencies(${PROJECT_NAME} copy_resources)
+add_dependencies(${PROJECT_NAME} compile_tags)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC plover/include
