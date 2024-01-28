@@ -3,14 +3,14 @@
 #include <plover/plover.h>
 
 #include "DescriptorAllocator.h"
-#include "Mesh.h"
 #include "Material.h"
+#include "Mesh.h"
 #include "Texture.h"
 #include "UI.h"
 #include "ttfRenderer.h"
 
-#include <optional>
 #include "glfw.h"
+#include <optional>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
@@ -23,9 +23,9 @@ const std::string TEXTURE_PATH = "../resources/textures/viking_room.png";
 
 const std::vector<Vertex> quadVertices = {
 	{{-1.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, {0.0, 0.0}},
-	{{-1.0,  1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, {0.0, 1.0}},
-	{{ 0.125,  1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, {1.0, 1.0}},
-	{{ 0.125, -1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, {1.0, 0.0}},
+	{{-1.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, {0.0, 1.0}},
+	{{0.125, 1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, {1.0, 1.0}},
+	{{0.125, -1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, {1.0, 0.0}},
 };
 
 const std::vector<u32> quadIndices = {0, 1, 2, 0, 2, 3};
@@ -33,6 +33,16 @@ const std::vector<u32> quadIndices = {0, 1, 2, 0, 2, 3};
 struct GlobalUniform {
 	alignas(16) glm::mat4 camera;
 	alignas(16) glm::vec3 cameraPos;
+};
+
+struct RaycasterUniform {
+	glm::vec3 cameraPos;
+	glm::vec3 cameraUp;
+	glm::vec3 cameraLeft;
+	float fov;
+	float aspectRatio;
+	float minDistance;
+	float maxDistance;
 };
 
 struct QueueFamilyIndices {
@@ -97,14 +107,14 @@ struct CreateImageViewInfo {
 };
 
 struct VulkanContext {
-	const std::vector<const char*> validationLayers = {
-		"VK_LAYER_KHRONOS_validation"
-	};
+	const std::vector<const char *> validationLayers = {
+		"VK_LAYER_KHRONOS_validation"};
 
-	const std::vector<const char*> deviceExtensions = {
+	const std::vector<const char *> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 #ifdef __APPLE__
-		,"VK_KHR_portability_subset"
+		,
+		"VK_KHR_portability_subset"
 #endif
 	};
 
@@ -149,7 +159,7 @@ struct VulkanContext {
 	std::vector<VkDescriptorSet> globalDescriptorSets;
 
 	UIContext ui;
-	
+
 	VkPipeline uiPipeline;
 	VkPipelineLayout uiPipelineLayout;
 
@@ -159,12 +169,12 @@ struct VulkanContext {
 
 	Camera camera;
 
-	std::unordered_map<size_t, Mesh*> meshes;
+	std::unordered_map<size_t, Mesh *> meshes;
 	std::unordered_map<size_t, Material> materials;
 
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VmaAllocation> uniformBuffersAllocations;
-	std::vector<void*> uniformBuffersMapped;
+	std::vector<void *> uniformBuffersMapped;
 
 	Texture texture;
 
@@ -184,17 +194,18 @@ struct VulkanContext {
 
 	VkDebugUtilsMessengerEXT debugMessenger;
 
-	GLFWwindow* window;
+	GLFWwindow *window;
 
-	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+	static void framebufferResizeCallback(GLFWwindow *window, int width,
+										  int height);
 
-	std::vector<const char*> getRequiredExtensions();
+	std::vector<const char *> getRequiredExtensions();
 
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-		VkDebugUtilsMessageTypeFlagsEXT messageType,
-		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void* pUserData);
+	static VKAPI_ATTR VkBool32 VKAPI_CALL
+	debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+				  VkDebugUtilsMessageTypeFlagsEXT messageType,
+				  const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+				  void *pUserData);
 
 	void initWindow();
 
@@ -206,7 +217,8 @@ struct VulkanContext {
 
 	void createInstance();
 
-	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	void populateDebugMessengerCreateInfo(
+		VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 	void setupDebugMessenger();
 
 	bool checkValidationLayerSupport();
@@ -220,42 +232,54 @@ struct VulkanContext {
 	void createLogicalDevice();
 
 	void initAllocator();
-	void createBuffer(CreateBufferInfo createInfo, VkBuffer& buffer, VmaAllocation& bufferAllocation);
-	void createImage(CreateImageInfo createImage, VkImage& image, VmaAllocation& imageAllocation);
+	void createBuffer(CreateBufferInfo createInfo, VkBuffer &buffer,
+					  VmaAllocation &bufferAllocation);
+	void createImage(CreateImageInfo createImage, VkImage &image,
+					 VmaAllocation &imageAllocation);
 
 	void createSurface();
 
-	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+	VkPresentModeKHR chooseSwapPresentMode(
+		const std::vector<VkPresentModeKHR> &availablePresentModes);
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(
+		const std::vector<VkSurfaceFormatKHR> &availableFormats);
 	void createSwapChain();
 
-	void createImageView(CreateImageViewInfo createInfo, VkImageView *imageView);
+	void createImageView(CreateImageViewInfo createInfo,
+						 VkImageView *imageView);
 	void createImageViews();
 
 	void createRenderPass();
 
 	void createGlobalDescriptorSetLayout();
 
-	VkShaderModule createShaderModule(const std::vector<char>& code);
+	VkShaderModule createShaderModule(const std::vector<char> &code);
 
-	void createGraphicsPipeline(PipelineCreateInfo info,
-								VkPipeline& pipeline,
-								VkPipelineLayout& pipelineLayout);
+	void createGraphicsPipeline(PipelineCreateInfo info, VkPipeline &pipeline,
+								VkPipelineLayout &pipelineLayout);
 
 	void createWireframeDescriptorSetLayout();
 	void createWireframePipeline();
 
+	void createRaycasterPipeline();
+
 	void createFramebuffers();
 
-	void createCommandPool(VkCommandPoolCreateFlagBits flags, VkCommandPool& commandPool);
+	void createCommandPool(VkCommandPoolCreateFlagBits flags,
+						   VkCommandPool &commandPool);
 	void createCommandPools();
 
-	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, u32 layers);
+	void transitionImageLayout(VkImage image, VkFormat format,
+							   VkImageLayout oldLayout, VkImageLayout newLayout,
+							   u32 layers);
 
-	void copyBufferToImage(VkBuffer buffer, VkImage image, u32 width, u32 height, u32 imageSize, u32 layers);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
+						   u32 height, u32 imageSize, u32 layers);
 
-	VkFormat findSupportedFormats(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+	VkFormat findSupportedFormats(const std::vector<VkFormat> &candidates,
+								  VkImageTiling tiling,
+								  VkFormatFeatureFlags features);
 
 	VkFormat findDepthFormat();
 	void createDepthResources();
@@ -275,7 +299,8 @@ struct VulkanContext {
 
 	void createSyncObjects();
 
-	void recordCommandBuffer(VkCommandBuffer currentCommandBuffer, uint32_t imageIndex);
+	void recordCommandBuffer(VkCommandBuffer currentCommandBuffer,
+							 uint32_t imageIndex);
 
 	void updateUniformBuffer(uint32_t currentImage);
 
