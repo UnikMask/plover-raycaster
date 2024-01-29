@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "UI.h"
+#include "raycaster.h"
 #include "ttfRenderer.h"
 
 #include "glfw.h"
@@ -33,16 +34,6 @@ const std::vector<u32> quadIndices = {0, 1, 2, 0, 2, 3};
 struct GlobalUniform {
 	alignas(16) glm::mat4 camera;
 	alignas(16) glm::vec3 cameraPos;
-};
-
-struct RaycasterUniform {
-	glm::vec3 cameraPos;
-	glm::vec3 cameraUp;
-	glm::vec3 cameraLeft;
-	float fov;
-	float aspectRatio;
-	float minDistance;
-	float maxDistance;
 };
 
 struct QueueFamilyIndices {
@@ -159,6 +150,7 @@ struct VulkanContext {
 	std::vector<VkDescriptorSet> globalDescriptorSets;
 
 	UIContext ui;
+	RaycasterContext *raycasterCtx;
 
 	VkPipeline uiPipeline;
 	VkPipelineLayout uiPipelineLayout;
@@ -261,8 +253,6 @@ struct VulkanContext {
 
 	void createWireframeDescriptorSetLayout();
 	void createWireframePipeline();
-
-	void createRaycasterPipeline();
 
 	void createFramebuffers();
 

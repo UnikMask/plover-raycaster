@@ -1,10 +1,12 @@
 #include "VulkanContext.h"
 #include "Mesh.h"
 #include "plover_int.h"
+#include "raycaster.h"
 
 #include <iostream>
 #include <map>
 #include <set>
+#include <vulkan/vulkan_core.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
@@ -1044,11 +1046,6 @@ void VulkanContext::createWireframePipeline() {
 						   wireframePipelineLayout);
 }
 
-void VulkanContext::createRaycasterPipeline() {
-	VkDescriptorSetLayout layouts[2] = {globalDescriptorSetLayout,
-										meshDescriptorSetLayout};
-}
-
 void VulkanContext::createFramebuffers() {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
@@ -1389,6 +1386,7 @@ void VulkanContext::initVulkan() {
 	createUniformBuffers();
 	createDescriptorAllocator();
 	createGlobalDescriptorSets();
+	raycasterCtx = new RaycasterContext(*this);
 	createCommandBuffer();
 	createSyncObjects();
 	createUI(*this, &ui);
@@ -1650,6 +1648,7 @@ void VulkanContext::cleanup() {
 	vkDestroyDescriptorSetLayout(device, materialDescriptorSetLayout, nullptr);
 	vkDestroyDescriptorSetLayout(device, meshDescriptorSetLayout, nullptr);
 	vkDestroyDescriptorSetLayout(device, uiDescriptorSetLayout, nullptr);
+	delete this->raycasterCtx;
 
 	for (const auto &kv : meshes) {
 		Mesh *mesh = kv.second;

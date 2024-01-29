@@ -62,6 +62,7 @@ add_executable(
     "src/Texture.cpp" "src/Texture.h"
     "src/UI.cpp" "src/UI.h"
     "src/AssetLoader.h" "src/AssetLoader.cpp"
+    "src/raycaster.h" "src/raycaster.cpp"
     )
 
 if (WIN32)
