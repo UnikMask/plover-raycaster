@@ -72,13 +72,10 @@ if (WIN32)
     )
 endif ()
 
-add_subdirectory(libraries/header_libs)
-
 target_include_directories(${PROJECT_NAME}
 	PUBLIC include/
 	PUBLIC ../lapwing/include
 	PUBLIC ${Vulkan_INCLUDE_DIRS}
-	PUBLIC libraries/header_libs/include
 	PUBLIC ${FREETYPE_INCLUDE_DIRS}
 )
 
