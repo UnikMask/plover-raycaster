@@ -1386,7 +1386,7 @@ void VulkanContext::initVulkan() {
 	createUniformBuffers();
 	createDescriptorAllocator();
 	createGlobalDescriptorSets();
-	raycasterCtx = new RaycasterContext(*this);
+	raycasterCtx = new RaycasterContext(*this, 16, 16, 0);
 	createCommandBuffer();
 	createSyncObjects();
 	createUI(*this, &ui);
@@ -1667,6 +1667,8 @@ void VulkanContext::cleanup() {
 
 	vkDestroyPipeline(device, uiPipeline, nullptr);
 	vkDestroyPipelineLayout(device, uiPipelineLayout, nullptr);
+	vkDestroyPipeline(device, wireframePipeline, nullptr);
+	vkDestroyPipelineLayout(device, wireframePipelineLayout, nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vmaDestroyBuffer(allocator, uniformBuffers[i],
