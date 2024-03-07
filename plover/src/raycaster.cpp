@@ -1,14 +1,19 @@
 #include "raycaster.h"
+#include "Mesh.h"
 #include "Texture.h"
 #include "VulkanContext.h"
 #include <array>
+#include <cstdint>
+#include <iostream>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
-RaycasterContext::RaycasterContext(VulkanContext &context) {
+RaycasterContext::RaycasterContext(VulkanContext &context, uint32_t width,
+								   uint32_t height, uint64_t seed) {
 	this->context = &context;
+	createMap(width, height, seed);
 	createDescriptorSetLayout();
-	createUniform();
+	createUniformBuffers();
 	createDescriptorSets();
 	createRaycasterPipeline();
 }
@@ -22,10 +27,11 @@ RaycasterContext::~RaycasterContext() {
 	}
 	vkDestroyPipeline(context->device, pipeline, nullptr);
 	vkDestroyPipelineLayout(context->device, pipelineLayout, nullptr);
+	lvlTex.cleanup(*context);
 	context = nullptr;
 }
 
-void RaycasterContext::createUniform() {
+void RaycasterContext::createUniformBuffers() {
 	VkDeviceSize bufferSize = sizeof(RaycasterUniform);
 
 	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -65,7 +71,7 @@ void RaycasterContext::createDescriptorSetLayout() {
 
 	VkDescriptorSetLayoutBinding levelBinding{
 		.binding = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 		.descriptorCount = 1,
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.pImmutableSamplers = 0};
@@ -77,12 +83,12 @@ void RaycasterContext::createDescriptorSetLayout() {
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.pImmutableSamplers = 0};
 
-	std::array<VkDescriptorSetLayoutBinding, 3> bindings = {
-		uboBinding, levelBinding, textureMappings};
+	std::vector<VkDescriptorSetLayoutBinding> bindings = {uboBinding,
+														  levelBinding};
 
 	VkDescriptorSetLayoutCreateInfo info{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = bindings.size(),
+		.bindingCount = (uint32_t)bindings.size(),
 		.pBindings = bindings.data()};
 	if (vkCreateDescriptorSetLayout(context->device, &info, nullptr,
 									&descriptorSetLayout) != VK_SUCCESS) {
@@ -102,22 +108,21 @@ void RaycasterContext::createDescriptorSets() {
 										  .range = sizeof(RaycasterUniform)};
 		// Generate level texture image info
 		VkDescriptorImageInfo lvlInfo{
-			.sampler = nullptr,
-			.imageView = lvlTex->imageView,
-			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		};
+			.sampler = lvlTex.sampler,
+			.imageView = lvlTex.imageView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
 
 		// Generate block texture image info
-		VkDescriptorImageInfo texInfo[MAX_TEXTURES];
-		for (int j = 0; j < MAX_TEXTURES; j++) {
-			texInfo[j] = VkDescriptorImageInfo{
-				.sampler = nullptr,
-				.imageView = textures[j % textures.size()]->imageView,
-				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
-		}
+		// VkDescriptorImageInfo texInfo[MAX_TEXTURES];
+		// for (int j = 0; j < MAX_TEXTURES; j++) {
+		// 	texInfo[j] = VkDescriptorImageInfo{
+		// 		.sampler = nullptr,
+		// 		.imageView = textures[j % textures.size()]->imageView,
+		// 		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+		// }
 
 		// Camera uniform buffer information
-		VkWriteDescriptorSet uboInfo{
+		VkWriteDescriptorSet uboWrite{
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.pNext = nullptr,
 			.dstSet = descriptorSets[i],
@@ -128,7 +133,7 @@ void RaycasterContext::createDescriptorSets() {
 			.pBufferInfo = &bufferInfo};
 
 		// Level texture information
-		VkWriteDescriptorSet levelInfo{
+		VkWriteDescriptorSet levelWrite{
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.pNext = nullptr,
 			.dstSet = descriptorSets[i],
@@ -137,37 +142,66 @@ void RaycasterContext::createDescriptorSets() {
 			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 			.pImageInfo = &lvlInfo};
 
-		// Block texture information
-		VkWriteDescriptorSet texDsInfo{
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.pNext = nullptr,
-			.dstSet = descriptorSets[i],
-			.dstBinding = 2,
-			.dstArrayElement = 0,
-			.descriptorCount = MAX_TEXTURES,
-			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.pImageInfo = texInfo};
+		// // Block texture information
+		// VkWriteDescriptorSet texDsWrite{
+		// 	.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		// 	.pNext = nullptr,
+		// 	.dstSet = descriptorSets[i],
+		// 	.dstBinding = 2,
+		// 	.dstArrayElement = 0,
+		// 	.descriptorCount = MAX_TEXTURES,
+		// 	.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		// 	.pImageInfo = texInfo
+		//       };
 
-		VkWriteDescriptorSet infoArray[3] = {uboInfo, levelInfo, texDsInfo};
-		vkUpdateDescriptorSets(context->device, 3, infoArray, 0, nullptr);
+		std::vector<VkWriteDescriptorSet> infoArray = {uboWrite, levelWrite};
+		vkUpdateDescriptorSets(context->device, (size_t)infoArray.size(),
+							   infoArray.data(), 0, nullptr);
 	}
 }
 
 void RaycasterContext::createRaycasterPipeline() {
 	VkDescriptorSetLayout layouts[1] = {descriptorSetLayout};
 
+	auto attributeDescription = Vertex::getAttributeDescriptions();
+	auto bindingDescription = Vertex::getBindingDescription();
+
 	PipelineCreateInfo createInfo{
 		.useDepthBuffer = true,
 		.doCulling = true,
 		.wireframeMode = false,
-		.subpass = 2,
+		.subpass = 0,
 		.vertexShaderPath = "../resources/spirv/raycaster.vert.spv",
 		.fragmentShaderPath = "../resources/spirv/raycaster.frag.spv",
 		.descriptorSetLayoutCount = 1,
-		.bindingDescriptionCount = 0,
-		.pBindingDescriptions = nullptr,
-		.attributeDescriptionCount = 0,
-		.pAttributeDescriptions = nullptr};
+		.pDescriptorSetLayouts = &descriptorSetLayout,
+		.bindingDescriptionCount = 1,
+		.pBindingDescriptions = &bindingDescription,
+		.attributeDescriptionCount = 1,
+		.pAttributeDescriptions = attributeDescription.data()};
 
 	context->createGraphicsPipeline(createInfo, pipeline, pipelineLayout);
+}
+
+// Create simple circle map
+void RaycasterContext::createMap(uint32_t width, uint32_t height,
+								 uint64_t seed) {
+	Bitmap mapBitmap;
+	createBitmap(&mapBitmap, width, height, BitmapFormat::G8);
+	for (size_t y = 0; y < height; y++) {
+		mapBitmap.writeGrayscale(1, 0, y);
+	}
+	for (size_t x = 0; x < width; x++) {
+		mapBitmap.writeGrayscale(1, x, 0);
+	}
+	createTexture(*this->context, mapBitmap, lvlTex);
+	vkDestroySampler(context->device, lvlTex.sampler, nullptr);
+	VkSamplerCreateInfo lvi{.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+							.magFilter = VK_FILTER_NEAREST,
+							.minFilter = VK_FILTER_NEAREST,
+							.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
+							.anisotropyEnable = VK_FALSE,
+							.compareEnable = VK_FALSE,
+							.compareOp = VK_COMPARE_OP_ALWAYS};
+	vkCreateSampler(context->device, &lvi, nullptr, &lvlTex.sampler);
 }

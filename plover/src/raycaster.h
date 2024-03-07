@@ -11,8 +11,8 @@ const int MAX_TEXTURES = 3;
 struct RaycasterContext {
   public:
 	// Raycaster information
-	Texture *lvlTex;
-	std::vector<Texture *> textures;
+	Texture lvlTex;
+	// std::vector<Texture *> textures;
 
 	VulkanContext *context;
 	std::vector<VkDescriptorSet> descriptorSets;
@@ -23,14 +23,18 @@ struct RaycasterContext {
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
 
-	RaycasterContext(VulkanContext &context);
+	RaycasterContext(VulkanContext &context, uint32_t width, uint32_t height,
+					 uint64_t seed);
 	~RaycasterContext();
 
+  private:
 	void updateUniform();
-	void createUniform();
+	void createUniformBuffers();
 	void createDescriptorSets();
 	void createRaycasterPipeline();
 	void createDescriptorSetLayout();
+
+	void createMap(uint32_t width, uint32_t height, uint64_t seed);
 };
 
 struct RaycasterUniform {
