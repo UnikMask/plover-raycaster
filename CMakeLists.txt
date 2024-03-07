@@ -41,7 +41,7 @@ add_custom_target(copy_resources ALL
     COMMENT "Copy resources into binary's directory")
 
 add_custom_target ( compile_tags ALL
-    COMMAND ctags -R --c++-kinds=+p --fields=+iaS --extra=+q . 
+    COMMAND ctags src/ plover/src lapwing/src -R --c++-kinds=+p --fields=+iaS --extras=+q 
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Compiling project tags")
 

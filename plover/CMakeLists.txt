@@ -44,6 +44,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(glm)
+add_subdirectory(libraries/header_libs)
 
 
 add_executable(
@@ -77,6 +78,7 @@ target_include_directories(${PROJECT_NAME}
 	PUBLIC ../lapwing/include
 	PUBLIC ${Vulkan_INCLUDE_DIRS}
 	PUBLIC ${FREETYPE_INCLUDE_DIRS}
+	PUBLIC libraries/header_libs/include
 )
 
 target_link_libraries(${PROJECT_NAME}
