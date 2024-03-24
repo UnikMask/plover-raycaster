@@ -5,6 +5,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "Texture.h"
+#include "glm/fwd.hpp"
 
 const int MAX_TEXTURES = 3;
 
@@ -23,12 +24,12 @@ struct RaycasterContext {
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
 
-	RaycasterContext(VulkanContext &context, uint32_t width, uint32_t height,
+	void updateUniform(uint32_t currentImage);
+	RaycasterContext(VulkanContext *context, uint32_t width, uint32_t height,
 					 uint64_t seed);
 	~RaycasterContext();
 
   private:
-	void updateUniform();
 	void createUniformBuffers();
 	void createDescriptorSets();
 	void createRaycasterPipeline();
@@ -39,6 +40,7 @@ struct RaycasterContext {
 
 struct RaycasterUniform {
 	glm::vec3 cameraPos;
+	glm::vec3 cameraDir;
 	glm::vec3 cameraUp;
 	glm::vec3 cameraLeft;
 	float fov;

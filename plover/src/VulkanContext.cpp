@@ -1386,7 +1386,7 @@ void VulkanContext::initVulkan() {
 	createUniformBuffers();
 	createDescriptorAllocator();
 	createGlobalDescriptorSets();
-	raycasterCtx = new RaycasterContext(*this, 16, 16, 0);
+	raycasterCtx = new RaycasterContext(this, 16, 16, 0);
 	createCommandBuffer();
 	createSyncObjects();
 	createUI(*this, &ui);
@@ -1540,6 +1540,9 @@ void VulkanContext::updateUniformBuffer(uint32_t currentImage) {
 		Mesh *mesh = kv.second;
 
 		mesh->updateUniformBuffer(currentImage);
+	}
+	if (raycasterCtx != nullptr) {
+		raycasterCtx->updateUniform(currentImage);
 	}
 }
 

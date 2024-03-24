@@ -2,15 +2,17 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "VulkanContext.h"
+#include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include <array>
 #include <cstdint>
-#include <iostream>
+#include <cstring>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
-RaycasterContext::RaycasterContext(VulkanContext &context, uint32_t width,
+RaycasterContext::RaycasterContext(VulkanContext *context, uint32_t width,
 								   uint32_t height, uint64_t seed) {
-	this->context = &context;
+	this->context = context;
 	createMap(width, height, seed);
 	createDescriptorSetLayout();
 	createUniformBuffers();
@@ -204,4 +206,19 @@ void RaycasterContext::createMap(uint32_t width, uint32_t height,
 							.compareEnable = VK_FALSE,
 							.compareOp = VK_COMPARE_OP_ALWAYS};
 	vkCreateSampler(context->device, &lvi, nullptr, &lvlTex.sampler);
+}
+
+void RaycasterContext::updateUniform(uint32_t currentImage) {
+	RaycasterUniform ro{.cameraPos = context->camera.position,
+						.cameraDir = context->camera.direction,
+						.cameraUp = glm::vec3(0.0f, 1.0f, 0.0f),
+						.fov = glm::radians(45.0f),
+						.aspectRatio = context->swapChainExtent.width /
+									   (float)context->swapChainExtent.height,
+						.minDistance = 0.1f,
+						.maxDistance = 100.0f};
+	ro.cameraLeft =
+		glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), ro.cameraDir));
+	ro.cameraUp = glm::cross(ro.cameraLeft, ro.cameraDir);
+	memcpy(uniformBuffersMapped[currentImage], &ro, sizeof(ro));
 }
