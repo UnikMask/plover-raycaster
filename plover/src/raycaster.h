@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <plover/plover.h>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -20,6 +21,8 @@ struct RaycasterContext {
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VmaAllocation> uniformBufferAllocations;
 	std::vector<void *> uniformBuffersMapped;
+	VkBuffer vertexBuffer;
+	VmaAllocation vertexBufferAlloc;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
@@ -31,6 +34,7 @@ struct RaycasterContext {
 
   private:
 	void createUniformBuffers();
+	void createVertexBuffer();
 	void createDescriptorSets();
 	void createRaycasterPipeline();
 	void createDescriptorSetLayout();
@@ -39,12 +43,24 @@ struct RaycasterContext {
 };
 
 struct RaycasterUniform {
-	glm::vec3 cameraPos;
-	glm::vec3 cameraDir;
-	glm::vec3 cameraUp;
-	glm::vec3 cameraLeft;
-	float fov;
-	float aspectRatio;
-	float minDistance;
-	float maxDistance;
+	alignas(16) glm::vec3 cameraPos;
+	alignas(16) glm::vec3 cameraDir;
+	alignas(16) glm::vec3 cameraUp;
+	alignas(16) glm::vec3 cameraLeft;
+	alignas(4) float fov;
+	alignas(4) float aspectRatio;
+	alignas(4) float minDistance;
+	alignas(4) float maxDistance;
 };
+
+struct RaycasterVertex {
+	glm::vec2 pos;
+	glm::vec2 display;
+
+	static VkVertexInputBindingDescription getBindingDescription();
+	static std::array<VkVertexInputAttributeDescription, 2>
+	getAttributeDescriptions();
+};
+
+const RaycasterVertex raycasterVertices[3]{
+	{{-2, 1}, {-2, 1}}, {{1, -2}, {1, -2}}, {{1, 1}, {1, 1}}};

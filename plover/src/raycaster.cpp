@@ -5,6 +5,7 @@
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
@@ -16,6 +17,7 @@ RaycasterContext::RaycasterContext(VulkanContext *context, uint32_t width,
 	createMap(width, height, seed);
 	createDescriptorSetLayout();
 	createUniformBuffers();
+	createVertexBuffer();
 	createDescriptorSets();
 	createRaycasterPipeline();
 }
@@ -27,6 +29,7 @@ RaycasterContext::~RaycasterContext() {
 		vmaDestroyBuffer(context->allocator, uniformBuffers[i],
 						 uniformBufferAllocations[i]);
 	}
+	vmaDestroyBuffer(context->allocator, vertexBuffer, vertexBufferAlloc);
 	vkDestroyPipeline(context->device, pipeline, nullptr);
 	vkDestroyPipelineLayout(context->device, pipelineLayout, nullptr);
 	lvlTex.cleanup(*context);
@@ -99,6 +102,37 @@ void RaycasterContext::createDescriptorSetLayout() {
 	}
 }
 
+void RaycasterContext::createVertexBuffer() {
+	VkDeviceSize size = 3 * sizeof(RaycasterVertex);
+
+	CreateBufferInfo vertexCreateInfo{
+		.size = size,
+		.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+				 VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		.vmaFlags = static_cast<VmaAllocationCreateFlagBits>(0)};
+	context->createBuffer(vertexCreateInfo, vertexBuffer, vertexBufferAlloc);
+
+	VkBuffer stagingBuf;
+	VmaAllocation stagingBufAlloc;
+	CreateBufferInfo stagingBufInfo{
+		.size = size,
+		.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+					  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		.vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT};
+
+	context->createBuffer(stagingBufInfo, stagingBuf, stagingBufAlloc);
+
+	void *data;
+	vmaMapMemory(context->allocator, stagingBufAlloc, &data);
+	memcpy(data, raycasterVertices, size);
+	vmaUnmapMemory(context->allocator, stagingBufAlloc);
+
+	context->copyBuffer(stagingBuf, vertexBuffer, size);
+	vmaDestroyBuffer(context->allocator, stagingBuf, stagingBufAlloc);
+}
+
 void RaycasterContext::createDescriptorSets() {
 	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	context->descriptorAllocator.allocate(
@@ -165,8 +199,8 @@ void RaycasterContext::createDescriptorSets() {
 void RaycasterContext::createRaycasterPipeline() {
 	VkDescriptorSetLayout layouts[1] = {descriptorSetLayout};
 
-	auto attributeDescription = Vertex::getAttributeDescriptions();
-	auto bindingDescription = Vertex::getBindingDescription();
+	auto attributeDescriptions = RaycasterVertex::getAttributeDescriptions();
+	auto bindingDescription = RaycasterVertex::getBindingDescription();
 
 	PipelineCreateInfo createInfo{
 		.useDepthBuffer = true,
@@ -179,8 +213,8 @@ void RaycasterContext::createRaycasterPipeline() {
 		.pDescriptorSetLayouts = &descriptorSetLayout,
 		.bindingDescriptionCount = 1,
 		.pBindingDescriptions = &bindingDescription,
-		.attributeDescriptionCount = 1,
-		.pAttributeDescriptions = attributeDescription.data()};
+		.attributeDescriptionCount = (uint32_t)attributeDescriptions.size(),
+		.pAttributeDescriptions = attributeDescriptions.data()};
 
 	context->createGraphicsPipeline(createInfo, pipeline, pipelineLayout);
 }
@@ -221,4 +255,24 @@ void RaycasterContext::updateUniform(uint32_t currentImage) {
 		glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), ro.cameraDir));
 	ro.cameraUp = glm::cross(ro.cameraLeft, ro.cameraDir);
 	memcpy(uniformBuffersMapped[currentImage], &ro, sizeof(ro));
+}
+
+VkVertexInputBindingDescription RaycasterVertex::getBindingDescription() {
+	return {.binding = 0,
+			.stride = sizeof(RaycasterVertex),
+			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX};
+}
+
+std::array<VkVertexInputAttributeDescription, 2>
+RaycasterVertex::getAttributeDescriptions() {
+	std::array<VkVertexInputAttributeDescription, 2> res;
+	res[0] = {.location = 0,
+			  .binding = 0,
+			  .format = VK_FORMAT_R32G32_SFLOAT,
+			  .offset = offsetof(RaycasterVertex, pos)};
+	res[1] = {.location = 1,
+			  .binding = 0,
+			  .format = VK_FORMAT_R32G32_SFLOAT,
+			  .offset = offsetof(RaycasterVertex, display)};
+	return res;
 }
