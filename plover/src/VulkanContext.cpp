@@ -1434,6 +1434,20 @@ void VulkanContext::recordCommandBuffer(VkCommandBuffer commandBuffer,
 	scissor.extent = swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+	if (raycasterCtx) {
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+						  raycasterCtx->pipeline);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+								raycasterCtx->pipelineLayout, 0, 1,
+								&raycasterCtx->descriptorSets[currentFrame], 0,
+								nullptr);
+
+		VkDeviceSize offsets[] = {0};
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &raycasterCtx->vertexBuffer,
+							   offsets);
+		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+	}
+
 	for (auto kv : meshes) {
 		Mesh *mesh = kv.second;
 		VkBuffer vertexBuffers[] = {mesh->vertexBuffer};
