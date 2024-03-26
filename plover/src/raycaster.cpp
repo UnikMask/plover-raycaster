@@ -103,7 +103,7 @@ void RaycasterContext::createDescriptorSetLayout() {
 }
 
 void RaycasterContext::createVertexBuffer() {
-	VkDeviceSize size = 3 * sizeof(RaycasterVertex);
+	VkDeviceSize size = raycasterVertices.size() * sizeof(RaycasterVertex);
 
 	CreateBufferInfo vertexCreateInfo{
 		.size = size,
@@ -126,7 +126,7 @@ void RaycasterContext::createVertexBuffer() {
 
 	void *data;
 	vmaMapMemory(context->allocator, stagingBufAlloc, &data);
-	memcpy(data, raycasterVertices, size);
+	memcpy(data, raycasterVertices.data(), size);
 	vmaUnmapMemory(context->allocator, stagingBufAlloc);
 
 	context->copyBuffer(stagingBuf, vertexBuffer, size);
