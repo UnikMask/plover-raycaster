@@ -62,5 +62,5 @@ struct RaycasterVertex {
 	getAttributeDescriptions();
 };
 
-const RaycasterVertex raycasterVertices[3]{
-	{{-2, 1}, {-2, 1}}, {{1, -2}, {1, -2}}, {{1, 1}, {1, 1}}};
+const std::vector<RaycasterVertex> raycasterVertices{
+	{{1, 1}, {1, 1}}, {{1, -3}, {1, -3}}, {{-3, 1}, {-3, 1}}};
