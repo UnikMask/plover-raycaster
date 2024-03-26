@@ -31,7 +31,9 @@ internal_func void init(GameMemory *mem) {
 
 	// Setup game state
 	state->deltaTime = handles.getTime();
-	state->camera.position = Vec3(0.0f, 0.0f, -2.0f);
+    state->mousePosition = Vec2(0, 0);
+    state->previousMousePosition = Vec2(0, 0);
+	state->camera.position = Vec3(2.5f, 2.5f, 0.5f);
 	state->cameraYaw = -HALF_PI;
 	state->buttonsPressed = 0;
 }
@@ -73,10 +75,12 @@ internal_func void handleInput(GameState *state) {
 
 	// Mouse movement
 	Vec2 mouseDelta = (state->mousePosition - state->previousMousePosition);
-	state->cameraYaw -= mouseDelta.x;
+    mouseDelta *= 0.001;
+	state->cameraYaw += mouseDelta.x;
 	state->cameraPitch += mouseDelta.y;
 	state->cameraPitch = glm::clamp(state->cameraPitch, (f32)-HALF_PI + 0.01f,
 									(f32)HALF_PI - 0.01f);
+	state->previousMousePosition = state->mousePosition;
 
 	// Update camera direction from yaw and pitch
 	state->camera.direction =
