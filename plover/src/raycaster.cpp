@@ -223,12 +223,11 @@ void RaycasterContext::createRaycasterPipeline() {
 void RaycasterContext::createMap(uint32_t width, uint32_t height,
 								 uint64_t seed) {
 	Bitmap mapBitmap;
-	createBitmap(&mapBitmap, width, height, BitmapFormat::G8);
-	for (size_t y = 0; y < height; y++) {
-		mapBitmap.writeGrayscale(1, 0, y);
-	}
-	for (size_t x = 0; x < width; x++) {
-		mapBitmap.writeGrayscale(1, x, 0);
+	createBitmap(&mapBitmap, width, height, BitmapFormat::RGBA8);
+	for (size_t x = 1; x < width - 1; x++) {
+		for (size_t y = 1; y < height - 1; y++) {
+			mapBitmap.writeGrayscale(255, x, y);
+		}
 	}
 	createTexture(*this->context, mapBitmap, lvlTex);
 	vkDestroySampler(context->device, lvlTex.sampler, nullptr);
