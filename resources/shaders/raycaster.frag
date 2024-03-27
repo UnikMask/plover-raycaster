@@ -72,7 +72,7 @@ void main() {
         }
         tile = texelFetch(map, mapPos.xz, 0);
         if (tile.rgb == vec3(0, 0, 0)) {
-            // hit = true;
+            hit = true;
         }
     }
     float dist = getDist(side, sideDist, deltaDist);
