@@ -1,16 +1,76 @@
 // vim:ft=glsl
 #version 460 core
 
+layout (binding = 1) uniform sampler2D map;
+
 layout (location = 0) in RayInfo {
     vec3 position;
     vec3 dir;
+    float zNear;
+    float zFar;
 } iRay;
 
 layout (location = 0) out vec4 outColor;
 // layout(depth_any) out float gl_FragDepth;
 
-// Get hit location from ray information
+vec3 tileColors[4] = vec3[](
+    vec3(1, 0, 0),
+    vec3(0.7, 0, 0),
+    vec3(0.4, 0.4, 0.4),
+    vec3(0.2, 0.2, 0.2)
+);
+
 void main() {
-    outColor = vec4(1, 1, 1, 1);
-    // gl_FragDepth = 0.99f;
+    ivec3 mapPos = ivec3(iRay.position);
+    vec3 deltaDist = 1 / abs(iRay.dir);
+    vec3 sideDist = (mapPos + vec3(1, 1, 1) - iRay.position) * deltaDist;
+
+    ivec3 tstep = ivec3(1, 1, 1);
+    if (iRay.dir.x < 0) {
+        tstep.x = -1;
+        sideDist.x = (iRay.position.x - mapPos.x) * deltaDist.x;
+    }
+    if (iRay.dir.y < 0) {
+        tstep.y = -1;
+        sideDist.y = (iRay.position.y - mapPos.y) * deltaDist.y;
+    }
+    if (iRay.dir.z < 0) {
+        tstep.z = -1;
+        sideDist.z = (iRay.position.z - mapPos.z) * deltaDist.z;
+    }
+
+    bool hit = false;
+    int side = 0;
+    vec4 tile = vec4(0, 0, 0, 1);
+    while (!hit) {
+        if (sideDist.x < sideDist.y && sideDist.x < sideDist.z) {
+            sideDist.x += deltaDist.x;
+            mapPos.x += tstep.x;
+            side = 0;
+        } else if (sideDist.z < sideDist.x && sideDist.z < sideDist.y) {
+            sideDist.z += deltaDist.z;
+            mapPos.z += tstep.z;
+            side = 1;
+        } else {
+            sideDist.y += deltaDist.y;
+            mapPos.y += tstep.y;
+            side = tstep.y == 1? 3: 2;
+            hit = true;
+        }
+        tile = texture(map, mapPos.xz / textureSize(map, 0));
+        if (tile.rgb == vec3(0, 0, 0)) {
+            hit = true;
+        }
+    }
+    float dist;
+    if (side == 0) {
+        dist = sideDist.x - deltaDist.x;
+    } else if (side == 1) {
+        dist = sideDist.y - deltaDist.y;
+    } else {
+        dist = sideDist.z - deltaDist.z;
+    }
+
+    outColor = vec4(tileColors[side], 1);
+    gl_FragDepth = (dist - iRay.zNear) / (iRay.zFar - iRay.zNear);
 }

@@ -18,12 +18,16 @@ layout (location = 1) in vec2 inDisplay;
 layout (location = 0) out RayInfo {
     vec3 position;
     vec3 dir;
+    float zNear;
+    float zFar;
 } oRay;
 
 // Get ray information (starting position, direction) from camera info.
 void main() {
     gl_Position = vec4(inPosition, 0, 1);
-    vec2 plane = vec2(tan(uRay.fov) * uRay.zNear, tan(uRay.fov) * uRay.zNear / uRay.aspectRatio);
-    oRay.dir = normalize(uRay.cameraDir + inDisplay.x * plane.x * uRay.cameraLeft - inDisplay.y * plane.y * uRay.cameraUp);
+    oRay.dir = normalize(uRay.cameraDir - inDisplay.x * tan(uRay.fov) *  uRay.cameraLeft - inDisplay.y * uRay.cameraUp * tan(uRay.fov) / uRay.aspectRatio);
+
     oRay.position = uRay.cameraPos + uRay.zNear * oRay.dir;
+    oRay.zNear = uRay.zNear;
+    oRay.zFar = uRay.zFar;
 }
