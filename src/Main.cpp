@@ -93,26 +93,26 @@ internal_func void handleInput(GameState *state) {
 	u64 playerInput = state->buttonsPressed;
 	f32 speed = state->deltaTime;
 	if (state->bindings.forward.isHeld(playerInput)) {
-		state->camera.position -= speed * state->camera.direction;
-	}
-	if (state->bindings.backward.isHeld(playerInput)) {
 		state->camera.position += speed * state->camera.direction;
 	}
-	if (state->bindings.left.isHeld(playerInput)) {
-		state->camera.position +=
-			speed *
-			glm::normalize(glm::cross(state->camera.direction, Vec3(0, 1, 0)));
+	if (state->bindings.backward.isHeld(playerInput)) {
+		state->camera.position -= speed * state->camera.direction;
 	}
-	if (state->bindings.right.isHeld(playerInput)) {
+	if (state->bindings.left.isHeld(playerInput)) {
 		state->camera.position -=
 			speed *
 			glm::normalize(glm::cross(state->camera.direction, Vec3(0, 1, 0)));
 	}
+	if (state->bindings.right.isHeld(playerInput)) {
+		state->camera.position +=
+			speed *
+			glm::normalize(glm::cross(state->camera.direction, Vec3(0, 1, 0)));
+	}
 	if (state->bindings.up.isHeld(playerInput)) {
-		state->camera.position += speed * Vec3(0, 1, 0);
+		state->camera.position -= speed * Vec3(0, 1, 0);
 	}
 	if (state->bindings.down.isHeld(playerInput)) {
-		state->camera.position -= speed * Vec3(0, 1, 0);
+		state->camera.position += speed * Vec3(0, 1, 0);
 	}
 }
 
