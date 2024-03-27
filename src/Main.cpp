@@ -32,10 +32,10 @@ internal_func void init(GameMemory *mem) {
 
 	// Setup game state
 	state->deltaTime = handles.getTime();
+	state->bindings = DEFAULT_BINDINGS;
 	state->mousePosition = Vec2(0, 0);
 	state->previousMousePosition = Vec2(0, 0);
-	state->camera.position = Vec3(2.5f, 2.5f, 0.5f);
-	state->cameraYaw = -HALF_PI;
+	state->camera.position = Vec3(2.5f, 0.5f, 2.5f);
 	state->buttonsPressed = 0;
 }
 
@@ -144,14 +144,14 @@ EXPORT int gameUpdateAndRender(Handles *_pHandles, GameMemory *mem) {
 
 	// Game loop
 	GameState *state = (GameState *)mem->persistentArena.base;
+
 	state->deltaTime = handles.getTime() - state->prevFrameTime;
-	state->prevFrameTime = handles.getTime();
-	handles.UI_Clear();
-
 	handleInput(state);
-
+	state->prevFrameTime = handles.getTime();
 	handles.pushRenderCommand(
 		{.tag = SET_CAMERA, .v = {.setCamera = {.camera = state->camera}}});
+
+	handles.UI_Clear();
 
 	drawUI(state);
 

@@ -8,23 +8,31 @@ class EntityDatabase {
 };
 
 class InputBinding {
+  public:
 	u64 mask;
 
-  public:
 	bool isHeld(u64 input) { return (mask & input) == mask; }
-
-	InputBinding(u64 mask) { this->mask = mask; }
 };
 
 class InputBindings {
   public:
-	InputBinding forward = InputBinding(KEY_W);
-	InputBinding left = InputBinding(KEY_A);
-	InputBinding backward = InputBinding(KEY_S);
-	InputBinding right = InputBinding(KEY_D);
-	InputBinding up = InputBinding(KEY_SHIFT + KEY_W);
-	InputBinding down = InputBinding(KEY_SHIFT + KEY_S);
-	InputBinding interact = InputBinding(MOUSE_LMB);
+	InputBinding forward;
+	InputBinding left;
+	InputBinding backward;
+	InputBinding right;
+	InputBinding up;
+	InputBinding down;
+	InputBinding interact;
+};
+
+const static InputBindings DEFAULT_BINDINGS = InputBindings{
+	.forward = {.mask = KEY_W},
+	.left = {.mask = KEY_A},
+	.backward = {.mask = KEY_S},
+	.right = {.mask = KEY_D},
+	.up = {.mask = KEY_SHIFT + KEY_W},
+	.down = {.mask = KEY_SHIFT + KEY_S},
+	.interact = {.mask = MOUSE_LMB},
 };
 
 class GameState {
