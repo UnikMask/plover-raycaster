@@ -71,7 +71,7 @@ void main() {
             hit = true;
         }
         tile = texelFetch(map, mapPos.xz, 0);
-        if (tile.rgb == vec3(0, 0, 0)) {
+        if (tile.rgb != vec3(1, 1, 1)) {
             hit = true;
         }
     }
