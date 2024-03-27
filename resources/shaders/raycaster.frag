@@ -29,11 +29,16 @@ float getDist(int side, vec3 sideDist, vec3 deltaDist) {
     return sideDist.y - deltaDist.y;
 }
 
+void onHit(int side, float dist, vec4 tile) {
+    outColor = vec4(tileColors[side], 1);
+    gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
+}
+
 void main() {
+    // Set init variable for raycasting loop
     ivec3 mapPos = ivec3(iRay.position);
     vec3 deltaDist = 1 / abs(iRay.dir);
     vec3 sideDist = (mapPos + vec3(1, 1, 1) - iRay.position) * deltaDist;
-
     ivec3 tstep = ivec3(1, 1, 1);
     if (iRay.dir.x < 0) {
         tstep.x = -1;
@@ -48,6 +53,7 @@ void main() {
         sideDist.z = (iRay.position.z - mapPos.z) * deltaDist.z;
     }
 
+    // Raycasting loop - increment dist until reach
     bool hit = false;
     int side = 0;
     vec4 tile = vec4(0, 0, 0, 1);
@@ -75,8 +81,5 @@ void main() {
             hit = true;
         }
     }
-    float dist = getDist(side, sideDist, deltaDist);
-
-    outColor = vec4(tileColors[side], 1);
-    gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
+    onHit(side, getDist(side, sideDist, deltaDist), tile);
 }
