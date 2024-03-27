@@ -20,6 +20,15 @@ vec3 tileColors[4] = vec3[](
     vec3(0.2, 0.2, 0.2)
 );
 
+float getDist(int side, vec3 sideDist, vec3 deltaDist) {
+    if (side == 0) {
+        return sideDist.x - deltaDist.x;
+    } else if (side == 1) {
+        return sideDist.z - deltaDist.z;
+    } 
+    return sideDist.y - deltaDist.y;
+}
+
 void main() {
     ivec3 mapPos = ivec3(iRay.position);
     vec3 deltaDist = 1 / abs(iRay.dir);
@@ -43,6 +52,10 @@ void main() {
     int side = 0;
     vec4 tile = vec4(0, 0, 0, 1);
     while (!hit) {
+        if (getDist(side, sideDist, deltaDist) > iRay.zFar - iRay.zNear) {
+            hit = true;
+            break;
+        }
         if (sideDist.x < sideDist.y && sideDist.x < sideDist.z) {
             sideDist.x += deltaDist.x;
             mapPos.x += tstep.x;
@@ -57,20 +70,13 @@ void main() {
             side = tstep.y == 1? 3: 2;
             hit = true;
         }
-        tile = texture(map, mapPos.xz / textureSize(map, 0));
+        tile = texelFetch(map, mapPos.xz, 0);
         if (tile.rgb == vec3(0, 0, 0)) {
-            hit = true;
+            // hit = true;
         }
     }
-    float dist;
-    if (side == 0) {
-        dist = sideDist.x - deltaDist.x;
-    } else if (side == 1) {
-        dist = sideDist.y - deltaDist.y;
-    } else {
-        dist = sideDist.z - deltaDist.z;
-    }
+    float dist = getDist(side, sideDist, deltaDist);
 
     outColor = vec4(tileColors[side], 1);
-    gl_FragDepth = (dist - iRay.zNear) / (iRay.zFar - iRay.zNear);
+    gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
 }
