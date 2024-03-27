@@ -26,13 +26,13 @@ class InputBindings {
 };
 
 const static InputBindings DEFAULT_BINDINGS = InputBindings{
-	.forward = {.mask = KEY_W},
-	.left = {.mask = KEY_A},
-	.backward = {.mask = KEY_S},
-	.right = {.mask = KEY_D},
-	.up = {.mask = KEY_SHIFT + KEY_W},
-	.down = {.mask = KEY_SHIFT + KEY_S},
-	.interact = {.mask = MOUSE_LMB},
+	.forward = {.mask = 1 << KEY_W},
+	.left = {.mask = 1 << KEY_A},
+	.backward = {.mask = 1 << KEY_S},
+	.right = {.mask = 1 << KEY_D},
+	.up = {.mask = 1 << KEY_SPACE},
+	.down = {.mask = 1 << KEY_SHIFT},
+	.interact = {.mask = 1 << MOUSE_LMB},
 };
 
 class GameState {
