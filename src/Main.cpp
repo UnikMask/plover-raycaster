@@ -3,6 +3,7 @@
 #include "plover-raycaster.h"
 #include "plover/plover.h"
 #include <cstdint>
+#include <iostream>
 
 #define ENTITY_COUNT 16
 
@@ -31,8 +32,8 @@ internal_func void init(GameMemory *mem) {
 
 	// Setup game state
 	state->deltaTime = handles.getTime();
-    state->mousePosition = Vec2(0, 0);
-    state->previousMousePosition = Vec2(0, 0);
+	state->mousePosition = Vec2(0, 0);
+	state->previousMousePosition = Vec2(0, 0);
 	state->camera.position = Vec3(2.5f, 2.5f, 0.5f);
 	state->cameraYaw = -HALF_PI;
 	state->buttonsPressed = 0;
@@ -75,7 +76,7 @@ internal_func void handleInput(GameState *state) {
 
 	// Mouse movement
 	Vec2 mouseDelta = (state->mousePosition - state->previousMousePosition);
-    mouseDelta *= 0.001;
+	mouseDelta *= 0.001;
 	state->cameraYaw += mouseDelta.x;
 	state->cameraPitch += mouseDelta.y;
 	state->cameraPitch = glm::clamp(state->cameraPitch, (f32)-HALF_PI + 0.01f,
@@ -87,6 +88,7 @@ internal_func void handleInput(GameState *state) {
 		glm::normalize(Vec3(cos(state->cameraYaw) * cos(state->cameraPitch),
 							sin(state->cameraPitch),
 							sin(state->cameraYaw) * cos(state->cameraPitch)));
+
 	// Player movement
 	u64 playerInput = state->buttonsPressed;
 	f32 speed = state->deltaTime;
@@ -147,6 +149,10 @@ EXPORT int gameUpdateAndRender(Handles *_pHandles, GameMemory *mem) {
 	handles.UI_Clear();
 
 	handleInput(state);
+
+	handles.pushRenderCommand(
+		{.tag = SET_CAMERA, .v = {.setCamera = {.camera = state->camera}}});
+
 	drawUI(state);
 
 	return 0;
