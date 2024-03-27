@@ -1445,7 +1445,7 @@ void VulkanContext::recordCommandBuffer(VkCommandBuffer commandBuffer,
 		VkDeviceSize offsets[] = {0};
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &raycasterCtx->vertexBuffer,
 							   offsets);
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		vkCmdDraw(commandBuffer, 6, 1, 0, 0);
 	}
 
 	for (auto kv : meshes) {
