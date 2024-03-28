@@ -27,6 +27,7 @@ struct Hash {
 enum AssetType {
 	IMAGE,
 	MODEL,
+    VOXEL_MODEL,
 };
 
 struct Entry {
