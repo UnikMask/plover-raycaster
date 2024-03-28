@@ -65,3 +65,9 @@ struct ModelMetadata {
 	u64 indexCount;
 	u8 vertexAttributes;
 };
+
+struct VoxelModelMetadata {
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+};
