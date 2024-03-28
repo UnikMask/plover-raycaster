@@ -1,4 +1,5 @@
 #pragma once
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -28,6 +29,11 @@ struct Writer {
     uintptr_t writeAsset(Entry& content, std::string path);
 
     ~Writer();
+
+private:
+    uintptr_t writeImage(Entry &content, std::string path);
+    uintptr_t writeModel(Entry &content, std::string path);
+    uintptr_t writeVoxelModel(Entry &content, std::string path);
 };
 
 struct Vertex {
