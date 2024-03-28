@@ -1,5 +1,8 @@
 #include "writer.h"
+#include "file_utils.h"
 #include "lapwing.h"
+#include "vox.h"
+#include <cstdlib>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -54,6 +57,18 @@ uintptr_t Writer::writeImage(Entry &content, std::string path) {
     } else {
         std::cerr << "Asset file " << path << " does not exist." << std::endl;
     }
+    return -1;
+}
+
+uintptr_t Writer::writeVoxelModel(Entry &content, std::string path) {
+    content.type = AssetType::VOXEL_MODEL;
+    VoxelModelMetadata modelMetadata {};
+    if (!fileExists(path)) {
+        std::cerr << "Asset file " << path << " does not exist." << std::endl;
+        return -1;
+    }
+    u8 *model = vox_load(path, &modelMetadata.width, &modelMetadata.height, &modelMetadata.depth);
+    free(model);
     return -1;
 }
 
