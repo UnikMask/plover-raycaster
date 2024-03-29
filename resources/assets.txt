@@ -1,4 +1,5 @@
 models/rect.obj
+models/map.vox
 textures/floor.png
 textures/normal.jpg
 textures/sphere.png
