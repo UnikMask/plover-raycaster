@@ -11,7 +11,7 @@ layout (location = 0) in RayInfo {
 } iRay;
 
 layout (location = 0) out vec4 outColor;
-// layout(depth_any) out float gl_FragDepth;
+layout(depth_greater) out float gl_FragDepth;
 
 vec3 tileColors[4] = vec3[](
     vec3(1, 0, 0),
