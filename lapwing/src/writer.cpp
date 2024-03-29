@@ -68,7 +68,9 @@ uintptr_t Writer::writeVoxelModel(Entry &content, std::string path) {
         return -1;
     }
     u8 *model = vox_load(path, &modelMetadata.width, &modelMetadata.height, &modelMetadata.depth);
-    free(model);
+    if (model != nullptr) {
+        free(model);
+    }
     return -1;
 }
 
