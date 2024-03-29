@@ -7,7 +7,7 @@ project("lapwing")
 
 add_executable(${PROJECT_NAME} "src/lapwing.cpp" "src/reader.cpp" "src/reader.h" "src/endian.h"
         "src/endian.cpp" "src/hasher.h" "src/hasher.cpp" "src/writer.cpp"  "src/writer.h"
-        "src/file_utils.h" "src/file_utils.cpp" "src/lz4.h" "src/lz4.c")
+        "src/file_utils.h" "src/file_utils.cpp" "src/lz4.h" "src/lz4.c" "src/vox.h" "src/vox.cpp")
 
 FetchContent_Declare(
     glm 
