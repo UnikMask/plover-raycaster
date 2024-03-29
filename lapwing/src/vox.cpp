@@ -1,4 +1,5 @@
 #include "vox.h"
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
@@ -54,8 +55,6 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 		next = ChunkMetadata(p, contents);
 	}
 
-	std::cout << "ChunkMetadata { id: " << next.id << ", size: " << next.size
-			  << "}" << std::endl;
 	if (next.id != "SIZE" || next.size != 12) {
 		std::cerr << "No SIZE chunk in VOX file or size malformed!"
 				  << std::endl;
@@ -65,8 +64,50 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 	*height = getSize(p, contents);
 	*depth = getSize(p, contents);
 
+    // Get voxel data
+    next = ChunkMetadata(p, contents);
+    if (next.id != "XYZI") {
+        std::cerr << "No XYZI chunk in VOX file - file malformed!" << std::endl;
+        return nullptr;
+    }
+
+    uint32_t *voxels = (uint32_t *) malloc(next.size);
+    size_t num_voxels = next.size;
+    for (size_t i = 0; i < num_voxels; i++) {
+        voxels[i] = getSize(p, contents);
+    }
+
+    // Get palette
+    for(; p < contents.size() && next.id != "RGBA"; next = ChunkMetadata(p, contents)) {
+        ignoreChunk(next, p, contents);
+    }
+    if (p == contents.size()) {
+        std::cerr << "No RGBA chunk in VOX file - file malformed!" << std::endl;
+        free(voxels);
+        return nullptr;
+    }
+    if (next.size != 256 * 4) {
+        std::cerr << "Malformed VOX file palette!" << std::endl;
+        free(voxels);
+        return nullptr;
+    }
+    uint32_t colors[256];
+    for (size_t i = 0; i < 256; i++) {
+        colors[i] = getSize(p, contents);
+    }
+    contents.clear();
+
 	uint32_t *data =
 		(uint32_t *)calloc(*width * *height * *depth, sizeof(uint32_t));
+    for (size_t i = 0; i < num_voxels; i++) {
+        uint8_t x = voxels[i] & 0xff;
+        uint8_t y = (voxels[i] >> 8) & 0xff;
+        uint8_t z = (voxels[i] >> 16) & 0xff;
+        uint8_t index = voxels[i] >> 24;
+
+        data[(*width * *height) * z + *width * y + x] = colors[index];
+    }
+    free(voxels);
 	return (uint8_t *)data;
 }
 
