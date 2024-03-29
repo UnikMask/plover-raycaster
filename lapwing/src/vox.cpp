@@ -20,6 +20,7 @@ struct ChunkMetadata {
 	ChunkMetadata(uintptr_t &p, std::vector<char> &content) {
 		id = getName(p, content);
 		size = getSize(p, content);
+		children_size = getSize(p, content);
 	}
 };
 void ignoreChunk(ChunkMetadata chunk, uintptr_t &p,
@@ -53,8 +54,11 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 		next = ChunkMetadata(p, contents);
 	}
 
+	std::cout << "ChunkMetadata { id: " << next.id << ", size: " << next.size
+			  << "}" << std::endl;
 	if (next.id != "SIZE" || next.size != 12) {
-		std::cerr << "No SIZE chunk in VOX file!" << std::endl;
+		std::cerr << "No SIZE chunk in VOX file or size malformed!"
+				  << std::endl;
 		return nullptr;
 	}
 	*width = getSize(p, contents);
@@ -89,7 +93,7 @@ std::string getName(uintptr_t &p, std::vector<char> &contents) {
 uint32_t getSize(uintptr_t &p, std::vector<char> &contents) {
 	uint32_t res = 0;
 	for (size_t i = 0; i < 4; i++) {
-		res = (res << 8) + contents[p++];
+		res += contents[p++] << (i * 8);
 	}
 	return res;
 }
