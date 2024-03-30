@@ -81,6 +81,7 @@ struct CreateBufferInfo {
 struct CreateImageInfo {
 	u32 width;
 	u32 height;
+    u32 depth = 1;
 	u32 layers;
 	VkFormat format;
 	VkImageTiling tiling;
