@@ -1141,8 +1141,14 @@ void VulkanContext::transitionImageLayout(VkImage image, VkFormat format,
 	endSingleTimeCommands(commandBuffer);
 }
 
+void VulkanContext::copyBufferToImage(VkBuffer buffer, VkImage image, u32 width, 
+                                      u32 height, u32 imageSize, u32 layers) {
+    copyBufferToImage(buffer, image, width, height, 1, imageSize, layers);
+}
+
 void VulkanContext::copyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
-									  u32 height, u32 imageSize, u32 layers) {
+									  u32 height, u32 depth, u32 imageSize, 
+                                      u32 layers) {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 	VkBufferImageCopy region{};
@@ -1156,7 +1162,7 @@ void VulkanContext::copyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
 	region.imageSubresource.layerCount = layers;
 
 	region.imageOffset = {0, 0, 0};
-	region.imageExtent = {width, height, 1};
+	region.imageExtent = {width, height, depth};
 
 	vkCmdCopyBufferToImage(commandBuffer, buffer, image,
 						   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);

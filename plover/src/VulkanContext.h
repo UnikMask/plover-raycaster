@@ -75,7 +75,7 @@ struct CreateBufferInfo {
 	VkDeviceSize size;
 	VkBufferUsageFlags usage;
 	VkMemoryPropertyFlags properties;
-	VmaAllocationCreateFlagBits vmaFlags;
+	VmaAllocationCreateFlags vmaFlags;
 };
 
 struct CreateImageInfo {
@@ -267,6 +267,8 @@ struct VulkanContext {
 
 	void copyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
 						   u32 height, u32 imageSize, u32 layers);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
+						   u32 height, u32 depth, u32 imageSize, u32 layers);
 
 	VkFormat findSupportedFormats(const std::vector<VkFormat> &candidates,
 								  VkImageTiling tiling,
