@@ -1,6 +1,7 @@
 #include "Texture.h"
 #include "VulkanContext.h"
 #include "lapwing.h"
+#include <cstdlib>
 
 void createBitmap(Bitmap *bitmap, u32 width, u32 height, BitmapFormat format) {
 	bitmap->width = width;
@@ -284,4 +285,43 @@ void ArrayTexture::cleanup(VulkanContext& context) {
 	vkDestroySampler(context.device, sampler, nullptr);
 	vkDestroyImageView(context.device, imageView, nullptr);
 	vmaDestroyImage(context.allocator, image, allocation);
+}
+
+VoxelMap::VoxelMap(u32 width, u32 height, u32 depth, BitmapFormat format) {
+    this->format = format;
+    this->width = width, this->height = height, this->depth = depth;
+    this->voxels = malloc(height * width * depth * stride());
+}
+
+VoxelMap::~VoxelMap() {
+    free(this->voxels);
+}
+
+void VoxelMap::writeGrayscale(u8 value, u32 x, u32 y, u32 z) {
+    switch (format) {
+        case G8:
+         ((u8*) voxels)[index(x, y, z)] = value;
+            break;
+        case RGBA8:
+        case SRGBA8:
+         ((u8*) voxels)[index(x, y, z) * stride()] = value;
+         ((u8*) voxels)[index(x, y, z) * stride() + 1] = value;
+         ((u8*) voxels)[index(x, y, z) * stride() + 2] = value;
+         ((u8*) voxels)[index(x, y, z) * stride() + 3] = value;
+    }
+}
+
+
+void VoxelMap::writeRGBA(UVec4 color, u32 x, u32 y, u32 z) {
+    switch (format) {
+        case G8:
+         ((u8*) voxels)[index(x, y, z)] = color.a;
+            break;
+        case RGBA8:
+        case SRGBA8:
+         ((u8*) voxels)[index(x, y, z) * stride()] = color.r;
+         ((u8*) voxels)[index(x, y, z) * stride() + 1] = color.g;
+         ((u8*) voxels)[index(x, y, z) * stride() + 2] = color.b;
+         ((u8*) voxels)[index(x, y, z) * stride() + 3] = color.a;
+    }
 }
