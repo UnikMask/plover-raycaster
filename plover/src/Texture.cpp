@@ -2,6 +2,8 @@
 #include "VulkanContext.h"
 #include "lapwing.h"
 #include <cstdlib>
+#include <cstring>
+#include <vulkan/vulkan_core.h>
 
 void createBitmap(Bitmap *bitmap, u32 width, u32 height, BitmapFormat format) {
 	bitmap->width = width;
@@ -170,6 +172,34 @@ void Texture::copyBitmap(VulkanContext& context, Bitmap bitmap) {
 					 stagingBufferAllocation);
 }
 
+void Texture::copyVoxelmap(VulkanContext &context, VoxelMap voxelmap) {
+    assert(voxelmap.width * voxelmap.height * voxelmap.stride() == imageSize 
+           && "Image size mismatch when updating texture!");
+    assert(voxelmap.vulkanFormat() == format 
+           && "Format mismatch when updating texture!");
+
+    VkBuffer stagingBuf;
+    VmaAllocation stagingBufAlloc;
+
+    CreateBufferInfo stagingInfo {
+        .size = imageSize,
+        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        .properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT 
+            | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        .vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT};
+
+    context.createBuffer(stagingInfo, stagingBuf, stagingBufAlloc);
+
+    void *data;
+    vmaMapMemory(context.allocator, stagingBufAlloc, &data);
+    memcpy(data, voxelmap.voxels, imageSize);
+    vmaUnmapMemory(context.allocator, stagingBufAlloc);
+
+    context.transitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
+    context.copyBufferToImage(stagingBuf, image, voxelmap.width, voxelmap.height, voxelmap.depth, imageSize, 1);
+    context.transitionImageLayout(image, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL, 1);
+}
+
 void Texture::cleanup(VulkanContext& context) {
 	vkDestroySampler(context.device, sampler, nullptr);
 	vkDestroyImageView(context.device, imageView, nullptr);
@@ -323,5 +353,59 @@ void VoxelMap::writeRGBA(UVec4 color, u32 x, u32 y, u32 z) {
          ((u8*) voxels)[index(x, y, z) * stride() + 1] = color.g;
          ((u8*) voxels)[index(x, y, z) * stride() + 2] = color.b;
          ((u8*) voxels)[index(x, y, z) * stride() + 3] = color.a;
+    }
+}
+
+
+void createTexture(VulkanContext &context, VoxelMap voxelmap, Texture &texture) {
+    texture.imageSize = voxelmap.width * voxelmap.height * voxelmap.depth * voxelmap.stride();
+    texture.format = voxelmap.vulkanFormat();
+
+    CreateImageInfo imageInfo {
+        .width = voxelmap.width,
+        .height = voxelmap.height,
+        .depth = voxelmap.depth,
+        .layers = 1,
+        .format = texture.format,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        .properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        .vmaFlags = (VmaAllocationCreateFlagBits) 0};
+
+    context.createImage(imageInfo, texture.image, texture.allocation);
+    texture.copyVoxelmap(context, voxelmap);
+
+    CreateImageViewInfo imageViewInfo {
+        .image = texture.image,
+        .format = texture.format,
+        .aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT,
+        .viewType = VK_IMAGE_VIEW_TYPE_3D,
+        .layers = 1
+    };
+    context.createImageView(imageViewInfo, &texture.imageView);
+
+	VkPhysicalDeviceFeatures supportedFeatures;
+	vkGetPhysicalDeviceFeatures(context.physicalDevice, &supportedFeatures);
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(context.physicalDevice, &properties);
+
+    VkSamplerCreateInfo samplerInfo {
+        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+        .magFilter = VK_FILTER_LINEAR,
+        .minFilter = VK_FILTER_LINEAR,
+        .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+        .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .compareOp = VK_COMPARE_OP_ALWAYS,
+    };
+
+    if (supportedFeatures.samplerAnisotropy == VK_TRUE) {
+        samplerInfo.anisotropyEnable = VK_TRUE,
+        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+    }
+
+    if (vkCreateSampler(context.device, &samplerInfo, nullptr, &texture.sampler) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create texture sampler!");
     }
 }

@@ -70,6 +70,7 @@ struct Texture {
 	VkSampler sampler;
 
 	void copyBitmap(VulkanContext &context, Bitmap bitmap);
+	void copyVoxelmap(VulkanContext &context, VoxelMap voxelmap);
 	void cleanup(VulkanContext &context);
 };
 
