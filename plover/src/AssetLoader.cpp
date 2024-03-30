@@ -1,6 +1,9 @@
 #include "AssetLoader.h"
 #include "Mesh.h"
+#include "lapwing.h"
 
+#include <cstdlib>
+#include <stdexcept>
 #include <string.h>
 #include <math.h>
 #include <iostream>
@@ -63,6 +66,24 @@ ModelData AssetLoader::loadModel(const char* name, ModelMetadata* info) {
 	}
 
 	return data; 
+}
+
+Voxel *AssetLoader::loadVoxelModel(const char *name, VoxelModelMetadata *info) {
+    u64 assetHash = hashAsset(name);
+    auto entryPair = tableOfContents.find(assetHash);
+    
+    if (entryPair == tableOfContents.end()) {
+        throw std::runtime_error("Asset not found.\n");
+        return nullptr;
+    }
+
+    Entry entry = entryPair->second;
+    assets->seekg(entry.offset, std::ios_base::beg);
+    assets->read((char *) info, sizeof(VoxelModelMetadata));
+
+    Voxel *voxels = (Voxel *) malloc(info->amount_voxels * sizeof(Voxel));
+    assets->read((char *) voxels, info->amount_voxels * sizeof(Voxel));
+    return voxels;
 }
 
 u64 AssetLoader::hashAsset(const char* name) {
