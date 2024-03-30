@@ -1,4 +1,5 @@
 #include "vox.h"
+#include "writer.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -28,7 +29,7 @@ void ignoreChunk(ChunkMetadata chunk, uintptr_t &p,
 				 std::vector<char> &contents);
 
 uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
-				  uint32_t *depth) {
+				  uint32_t *depth, uint32_t *amount_voxels) {
 	auto contents = loadFile(path);
 	if (!contents.size()) {
 		return nullptr;
@@ -70,9 +71,9 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 		std::cerr << "No XYZI chunk in VOX file - file malformed!" << std::endl;
 		return nullptr;
 	}
-	size_t num_voxels = getSize(p, contents);
-	uint32_t *voxels = (uint32_t *)malloc(num_voxels * sizeof(uint32_t));
-	for (size_t i = 0; i < num_voxels; i++) {
+	*amount_voxels = getSize(p, contents);
+	uint32_t *voxels = (uint32_t *)malloc(*amount_voxels * sizeof(uint32_t));
+	for (size_t i = 0; i < *amount_voxels; i++) {
 		voxels[i] = getSize(p, contents);
 	}
 
@@ -98,43 +99,14 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 	}
 	contents.clear();
 
-	uint32_t *data =
-		(uint32_t *)calloc(*width * *height * *depth, sizeof(uint32_t));
-	for (size_t i = 0; i < num_voxels; i++) {
-		uint8_t x = voxels[i] & 0xff;
-		uint8_t y = (voxels[i] >> 8) & 0xff;
-		uint8_t z = (voxels[i] >> 16) & 0xff;
-		uint8_t index = voxels[i] >> 24;
-
-		data[(*width * *height) * z + *width * y + x] = colors[index];
+	Voxel *data = (Voxel *)calloc(*amount_voxels, sizeof(Voxel));
+	for (size_t i = 0; i < *amount_voxels; i++) {
+		data[i].pos[0] = voxels[i] & 0xff;
+		data[i].pos[1] = (voxels[i] >> 8) & 0xff;
+		data[i].pos[2] = (voxels[i] >> 16) & 0xff;
+		data[i].color = colors[voxels[i] >> 24];
 	}
 	free(voxels);
-
-	auto print_vox = [&](uint8_t w, uint8_t h, uint8_t d) {
-		std::string reset = "\033[1;0m";
-		uint32_t color = data[(*width * *height) * d + (*width) * h + w];
-		if (!(color >> 24)) {
-			std::cout << " ";
-		} else {
-			uint8_t r = color & 0xff;
-			uint8_t g = (color >> 8) & 0xff;
-			uint8_t b = (color >> 16) & 0xff;
-			std::cout << "\x1b[38;2;" << (int)r << ";" << (int)g << ";"
-					  << (int)b << "m"
-					  << "X";
-		}
-	};
-
-	for (uint8_t d = 0; d < *depth; d++) {
-		for (uint8_t h = 0; h < *height; h++) {
-			for (uint8_t w = 0; w < *width; w++) {
-				print_vox(w, h, d);
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-
 	return (uint8_t *)data;
 }
 
