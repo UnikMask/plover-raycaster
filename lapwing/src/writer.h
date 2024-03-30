@@ -50,11 +50,6 @@ struct Vertex {
 	}
 };
 
-struct Voxel {
-	uint8_t pos[3];
-	uint32_t color;
-};
-
 namespace std {
 template <> struct hash<Vertex> {
 	size_t operator()(Vertex const &vertex) const {

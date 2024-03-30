@@ -68,3 +68,9 @@ struct VoxelModelMetadata {
 	uint32_t depth;
 	uint32_t amount_voxels;
 };
+
+
+struct Voxel {
+	uint8_t pos[3];
+	uint32_t color;
+};
