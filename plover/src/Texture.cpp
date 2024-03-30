@@ -190,14 +190,22 @@ void Texture::copyVoxelmap(VulkanContext &context, VoxelMap voxelmap) {
 
     context.createBuffer(stagingInfo, stagingBuf, stagingBufAlloc);
 
-    uint32_t *data;
+    uint8_t *data;
     vmaMapMemory(context.allocator, stagingBufAlloc, (void **) &data);
     for (size_t i = 0; i < voxelmap.amount_voxels; i++) {
         uint8_t w = voxelmap.voxels[i].pos[0]; 
         uint8_t h = voxelmap.voxels[i].pos[1]; 
         uint8_t d = voxelmap.voxels[i].pos[2];
-        data[voxelmap.width * voxelmap.height * d + voxelmap.width * h + w]
-            = voxelmap.voxels[i].color;
+
+        switch (voxelmap.format) {
+            case G8:
+                data[voxelmap.width * voxelmap.height * d + voxelmap.width * h + w]
+                    = (u8) voxelmap.voxels[i].color;
+            case RGBA8:
+            case SRGBA8:
+                ((u32 *) data)[voxelmap.width * voxelmap.height * d + voxelmap.width * h + w]
+                    = voxelmap.voxels[i].color;
+        }
     } 
     vmaUnmapMemory(context.allocator, stagingBufAlloc);
 
