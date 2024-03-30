@@ -64,50 +64,77 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 	*height = getSize(p, contents);
 	*depth = getSize(p, contents);
 
-    // Get voxel data
-    next = ChunkMetadata(p, contents);
-    if (next.id != "XYZI") {
-        std::cerr << "No XYZI chunk in VOX file - file malformed!" << std::endl;
-        return nullptr;
-    }
+	// Get voxel data
+	next = ChunkMetadata(p, contents);
+	if (next.id != "XYZI") {
+		std::cerr << "No XYZI chunk in VOX file - file malformed!" << std::endl;
+		return nullptr;
+	}
+	size_t num_voxels = getSize(p, contents);
+	uint32_t *voxels = (uint32_t *)malloc(num_voxels * sizeof(uint32_t));
+	for (size_t i = 0; i < num_voxels; i++) {
+		voxels[i] = getSize(p, contents);
+	}
 
-    uint32_t *voxels = (uint32_t *) malloc(next.size);
-    size_t num_voxels = next.size;
-    for (size_t i = 0; i < num_voxels; i++) {
-        voxels[i] = getSize(p, contents);
-    }
-
-    // Get palette
-    for(; p < contents.size() && next.id != "RGBA"; next = ChunkMetadata(p, contents)) {
-        ignoreChunk(next, p, contents);
-    }
-    if (p == contents.size()) {
-        std::cerr << "No RGBA chunk in VOX file - file malformed!" << std::endl;
-        free(voxels);
-        return nullptr;
-    }
-    if (next.size != 256 * 4) {
-        std::cerr << "Malformed VOX file palette!" << std::endl;
-        free(voxels);
-        return nullptr;
-    }
-    uint32_t colors[256];
-    for (size_t i = 0; i < 256; i++) {
-        colors[i] = getSize(p, contents);
-    }
-    contents.clear();
+	// Get palette
+	next = ChunkMetadata(p, contents);
+	for (; p < contents.size() && next.id != "RGBA";
+		 next = ChunkMetadata(p, contents)) {
+		ignoreChunk(next, p, contents);
+	}
+	if (p == contents.size()) {
+		std::cerr << "No RGBA chunk in VOX file - file malformed!" << std::endl;
+		free(voxels);
+		return nullptr;
+	}
+	if (next.size != 256 * 4) {
+		std::cerr << "Malformed VOX file palette!" << std::endl;
+		free(voxels);
+		return nullptr;
+	}
+	uint32_t colors[256];
+	for (size_t i = 0; i < 256; i++) {
+		colors[i] = getSize(p, contents);
+	}
+	contents.clear();
 
 	uint32_t *data =
 		(uint32_t *)calloc(*width * *height * *depth, sizeof(uint32_t));
-    for (size_t i = 0; i < num_voxels; i++) {
-        uint8_t x = voxels[i] & 0xff;
-        uint8_t y = (voxels[i] >> 8) & 0xff;
-        uint8_t z = (voxels[i] >> 16) & 0xff;
-        uint8_t index = voxels[i] >> 24;
+	for (size_t i = 0; i < num_voxels; i++) {
+		uint8_t x = voxels[i] & 0xff;
+		uint8_t y = (voxels[i] >> 8) & 0xff;
+		uint8_t z = (voxels[i] >> 16) & 0xff;
+		uint8_t index = voxels[i] >> 24;
 
-        data[(*width * *height) * z + *width * y + x] = colors[index];
-    }
-    free(voxels);
+		data[(*width * *height) * z + *width * y + x] = colors[index];
+	}
+	free(voxels);
+
+	auto print_vox = [&](uint8_t w, uint8_t h, uint8_t d) {
+		std::string reset = "\033[1;0m";
+		uint32_t color = data[(*width * *height) * d + (*width) * h + w];
+		if (!(color >> 24)) {
+			std::cout << " ";
+		} else {
+			uint8_t r = color & 0xff;
+			uint8_t g = (color >> 8) & 0xff;
+			uint8_t b = (color >> 16) & 0xff;
+			std::cout << "\x1b[38;2;" << (int)r << ";" << (int)g << ";"
+					  << (int)b << "m"
+					  << "X";
+		}
+	};
+
+	for (uint8_t d = 0; d < *depth; d++) {
+		for (uint8_t h = 0; h < *height; h++) {
+			for (uint8_t w = 0; w < *width; w++) {
+				print_vox(w, h, d);
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
 	return (uint8_t *)data;
 }
 
