@@ -190,9 +190,15 @@ void Texture::copyVoxelmap(VulkanContext &context, VoxelMap voxelmap) {
 
     context.createBuffer(stagingInfo, stagingBuf, stagingBufAlloc);
 
-    void *data;
-    vmaMapMemory(context.allocator, stagingBufAlloc, &data);
-    memcpy(data, voxelmap.voxels, imageSize);
+    uint32_t *data;
+    vmaMapMemory(context.allocator, stagingBufAlloc, (void **) &data);
+    for (size_t i = 0; i < voxelmap.amount_voxels; i++) {
+        uint8_t w = voxelmap.voxels[i].pos[0]; 
+        uint8_t h = voxelmap.voxels[i].pos[1]; 
+        uint8_t d = voxelmap.voxels[i].pos[2];
+        data[voxelmap.width * voxelmap.height * d + voxelmap.width * h + w]
+            = voxelmap.voxels[i].color;
+    } 
     vmaUnmapMemory(context.allocator, stagingBufAlloc);
 
     context.transitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
@@ -320,7 +326,19 @@ void ArrayTexture::cleanup(VulkanContext& context) {
 VoxelMap::VoxelMap(u32 width, u32 height, u32 depth, BitmapFormat format) {
     this->format = format;
     this->width = width, this->height = height, this->depth = depth;
-    this->voxels = malloc(height * width * depth * stride());
+    this->voxels = (Voxel *) malloc(0x100);
+    this->alloc_size = 0x100;
+    this->amount_voxels = 0;
+}
+
+VoxelMap::VoxelMap(VoxelModelMetadata metadata, Voxel *voxels, BitmapFormat format) {
+    this->format = format;
+    width = metadata.width; 
+    height = metadata.height; 
+    depth = metadata.depth;
+    amount_voxels = metadata.amount_voxels;
+    alloc_size = metadata.amount_voxels;
+    this->voxels = voxels;
 }
 
 VoxelMap::~VoxelMap() {
@@ -328,32 +346,46 @@ VoxelMap::~VoxelMap() {
 }
 
 void VoxelMap::writeGrayscale(u8 value, u32 x, u32 y, u32 z) {
+    if (amount_voxels == alloc_size) {
+        voxels = (Voxel *) realloc(voxels, alloc_size * 2);
+        alloc_size *= 2;
+    }
+
+    u32 color;
     switch (format) {
         case G8:
-         ((u8*) voxels)[index(x, y, z)] = value;
+            color = value;
             break;
         case RGBA8:
         case SRGBA8:
-         ((u8*) voxels)[index(x, y, z) * stride()] = value;
-         ((u8*) voxels)[index(x, y, z) * stride() + 1] = value;
-         ((u8*) voxels)[index(x, y, z) * stride() + 2] = value;
-         ((u8*) voxels)[index(x, y, z) * stride() + 3] = value;
+            color = value + (value << 8) + (value << 16) + (value << 24);
     }
+    voxels[amount_voxels++] = {
+        .pos = {(u8) x, (u8) y, (u8) z},
+        .color = color 
+    };
 }
 
 
 void VoxelMap::writeRGBA(UVec4 color, u32 x, u32 y, u32 z) {
+    if (amount_voxels == alloc_size) {
+        voxels = (Voxel *) realloc(voxels, alloc_size * 2);
+        alloc_size *= 2;
+    }
+
+    u32 color_int;
     switch (format) {
         case G8:
-         ((u8*) voxels)[index(x, y, z)] = color.a;
+            color_int = color.a;
             break;
         case RGBA8:
         case SRGBA8:
-         ((u8*) voxels)[index(x, y, z) * stride()] = color.r;
-         ((u8*) voxels)[index(x, y, z) * stride() + 1] = color.g;
-         ((u8*) voxels)[index(x, y, z) * stride() + 2] = color.b;
-         ((u8*) voxels)[index(x, y, z) * stride() + 3] = color.a;
+            color_int = color.r + (color.g << 8) + (color.b << 16) + (color.a << 24);
     }
+    voxels[amount_voxels++] = {
+        .pos = {(u8) x, (u8) y, (u8) z},
+        .color = color_int
+    };
 }
 
 
