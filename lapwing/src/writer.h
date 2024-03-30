@@ -1,5 +1,7 @@
 #pragma once
 
+#include "glm/fwd.hpp"
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -9,31 +11,31 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
-#include <glm/gtx/hash.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
 
-#include "lapwing.h"
 #include "file_utils.h"
+#include "lapwing.h"
 
 struct Writer {
-    std::ofstream* assets; 
-    size_t ToCLength;
-    std::unordered_map<std::string, AssetType> extensionsToType;
+	std::ofstream *assets;
+	size_t ToCLength;
+	std::unordered_map<std::string, AssetType> extensionsToType;
 
-    Writer(std::string filename, size_t assetCount);
+	Writer(std::string filename, size_t assetCount);
 
-    void writeHash(Hash hash);
+	void writeHash(Hash hash);
 
-    void writeTableOfContents(Entry* ToC);
+	void writeTableOfContents(Entry *ToC);
 
-    uintptr_t writeAsset(Entry& content, std::string path);
+	uintptr_t writeAsset(Entry &content, std::string path);
 
-    ~Writer();
+	~Writer();
 
-private:
-    uintptr_t writeImage(Entry &content, std::string path);
-    uintptr_t writeModel(Entry &content, std::string path);
-    uintptr_t writeVoxelModel(Entry &content, std::string path);
+  private:
+	uintptr_t writeImage(Entry &content, std::string path);
+	uintptr_t writeModel(Entry &content, std::string path);
+	uintptr_t writeVoxelModel(Entry &content, std::string path);
 };
 
 struct Vertex {
@@ -42,17 +44,24 @@ struct Vertex {
 	glm::vec3 tangent;
 	glm::vec2 texCoord;
 
-	bool operator==(const Vertex& other) const {
-		return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
+	bool operator==(const Vertex &other) const {
+		return pos == other.pos && normal == other.normal &&
+			   texCoord == other.texCoord;
 	}
 };
 
+struct Voxel {
+	uint8_t pos[3];
+	uint32_t color;
+};
+
 namespace std {
-	template<> struct hash<Vertex> {
-		size_t operator()(Vertex const& vertex) const {
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-				(hash<glm::vec2>()(vertex.texCoord) << 1);
-		}
-	};
-}
+template <> struct hash<Vertex> {
+	size_t operator()(Vertex const &vertex) const {
+		return ((hash<glm::vec3>()(vertex.pos) ^
+				 (hash<glm::vec3>()(vertex.normal) << 1)) >>
+				1) ^
+			   (hash<glm::vec2>()(vertex.texCoord) << 1);
+	}
+};
+} // namespace std
