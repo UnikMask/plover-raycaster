@@ -80,10 +80,10 @@ uintptr_t Writer::writeVoxelModel(Entry &content, std::string path) {
 		return -1;
 	}
 
-	content.size = sizeof(VoxelModelMetadata) * modelMetadata.width *
-				   modelMetadata.height * modelMetadata.depth;
 	assets->write((char *)&modelMetadata, sizeof(VoxelModelMetadata));
-	assets->write((char *)model, content.size);
+    uint32_t model_size = sizeof(Voxel) * modelMetadata.amount_voxels;
+	assets->write((char *)model, model_size);
+	content.size = sizeof(VoxelModelMetadata) + model_size;
 	free(model);
 
 	return content.offset + content.size;
