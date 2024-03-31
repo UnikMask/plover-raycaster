@@ -70,7 +70,7 @@ void main() {
             mapPos.y += tstep.y;
         }
         tile = texelFetch(map, mapPos.xzy, 0);
-        if (tile != vec4(0, 0, 0, 0)) {
+        if (tile.a != 0) {
             hit = true;
         }
     }
