@@ -192,6 +192,9 @@ void Texture::copyVoxelmap(VulkanContext &context, VoxelMap &voxelmap) {
 
     uint8_t *data;
     vmaMapMemory(context.allocator, stagingBufAlloc, (void **) &data);
+    for (size_t i = 0; i < voxelmap.height * voxelmap.width * voxelmap.depth * voxelmap.stride(); i++) {
+        data[i] = 0;
+    }
     for (size_t i = 0; i < voxelmap.amount_voxels; i++) {
         uint8_t w = voxelmap.voxels[i].pos[0]; 
         uint8_t h = voxelmap.voxels[i].pos[1]; 
