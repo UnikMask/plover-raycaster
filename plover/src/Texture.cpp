@@ -172,7 +172,7 @@ void Texture::copyBitmap(VulkanContext& context, Bitmap bitmap) {
 					 stagingBufferAllocation);
 }
 
-void Texture::copyVoxelmap(VulkanContext &context, VoxelMap voxelmap) {
+void Texture::copyVoxelmap(VulkanContext &context, VoxelMap &voxelmap) {
     assert(voxelmap.width * voxelmap.height * voxelmap.depth * voxelmap.stride() == imageSize 
            && "Image size mismatch when updating texture!");
     assert(voxelmap.vulkanFormat() == format 
@@ -397,7 +397,7 @@ void VoxelMap::writeRGBA(UVec4 color, u32 x, u32 y, u32 z) {
 }
 
 
-void createTexture(VulkanContext &context, VoxelMap voxelmap, Texture &texture) {
+void createTexture(VulkanContext &context, VoxelMap &voxelmap, Texture &texture) {
     texture.imageSize = voxelmap.width * voxelmap.height * voxelmap.depth * voxelmap.stride();
     texture.format = voxelmap.vulkanFormat();
 

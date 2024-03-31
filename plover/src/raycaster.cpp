@@ -11,9 +11,10 @@
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
-RaycasterContext::RaycasterContext(Texture map, VulkanContext *context) {
+RaycasterContext::RaycasterContext(Texture &map, VulkanContext *context) {
 	this->context = context;
     this->lvlTex = map;
+    createMap(0, 0, 0);
 	createDescriptorSetLayout();
 	createUniformBuffers();
 	createVertexBuffer();

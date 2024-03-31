@@ -76,12 +76,12 @@ struct Texture {
 	VkSampler sampler;
 
 	void copyBitmap(VulkanContext &context, Bitmap bitmap);
-	void copyVoxelmap(VulkanContext &context, VoxelMap voxelmap);
+	void copyVoxelmap(VulkanContext &context, VoxelMap &voxelmap);
 	void cleanup(VulkanContext &context);
 };
 
 void createTexture(VulkanContext &context, Bitmap bitmap, Texture &texture);
-void createTexture(VulkanContext &context, VoxelMap voxelmap, Texture &texture);
+void createTexture(VulkanContext &context, VoxelMap &voxelmap, Texture &texture);
 void createImageTexture(VulkanContext &context, AssetLoader loader,
 						Texture &texture, const char *name,
 						BitmapFormat format);
