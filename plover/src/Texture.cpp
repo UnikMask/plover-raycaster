@@ -211,7 +211,7 @@ void Texture::copyVoxelmap(VulkanContext &context, VoxelMap voxelmap) {
 
     context.transitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
     context.copyBufferToImage(stagingBuf, image, voxelmap.width, voxelmap.height, voxelmap.depth, imageSize, 1);
-    context.transitionImageLayout(image, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL, 1);
+    context.transitionImageLayout(image, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
 }
 
 void Texture::cleanup(VulkanContext& context) {
