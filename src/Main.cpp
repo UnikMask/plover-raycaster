@@ -78,7 +78,7 @@ internal_func void handleInput(GameState *state) {
 	Vec2 mouseDelta = (state->mousePosition - state->previousMousePosition);
 	mouseDelta *= 0.001;
 	state->cameraYaw += mouseDelta.x;
-	state->cameraPitch += mouseDelta.y;
+	state->cameraPitch -= mouseDelta.y;
 	state->cameraPitch = glm::clamp(state->cameraPitch, (f32)-HALF_PI + 0.01f,
 									(f32)HALF_PI - 0.01f);
 	state->previousMousePosition = state->mousePosition;
@@ -98,21 +98,21 @@ internal_func void handleInput(GameState *state) {
 	if (state->bindings.backward.isHeld(playerInput)) {
 		state->camera.position -= speed * state->camera.direction;
 	}
-	if (state->bindings.left.isHeld(playerInput)) {
-		state->camera.position -=
-			speed *
-			glm::normalize(glm::cross(state->camera.direction, Vec3(0, 1, 0)));
-	}
 	if (state->bindings.right.isHeld(playerInput)) {
 		state->camera.position +=
 			speed *
 			glm::normalize(glm::cross(state->camera.direction, Vec3(0, 1, 0)));
 	}
+	if (state->bindings.left.isHeld(playerInput)) {
+		state->camera.position -=
+			speed *
+			glm::normalize(glm::cross(state->camera.direction, Vec3(0, 1, 0)));
+	}
 	if (state->bindings.up.isHeld(playerInput)) {
-		state->camera.position -= speed * Vec3(0, 1, 0);
+		state->camera.position += speed * Vec3(0, 1, 0);
 	}
 	if (state->bindings.down.isHeld(playerInput)) {
-		state->camera.position += speed * Vec3(0, 1, 0);
+		state->camera.position -= speed * Vec3(0, 1, 0);
 	}
 }
 
