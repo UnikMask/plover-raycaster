@@ -16,7 +16,7 @@ void Renderer::init() {
 	context->initVulkan();
 
     VoxelModelMetadata metadata;
-    Voxel *data = loader.loadVoxelModel("models/map.vox", &metadata);
+    Voxel *data = loader.loadVoxelModel("map.vox", &metadata);
     VoxelMap map = VoxelMap(metadata, data, BitmapFormat::RGBA8);
 
     Texture lvlTex;
