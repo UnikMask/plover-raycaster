@@ -18,6 +18,20 @@ void onHit(float dist, vec4 tile) {
     gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
 }
 
+bool oob(vec3 coords, vec3 dir) {
+    vec3 bounds = textureSize(map, 0);
+    if ((dir.x > 0 && coords.x > bounds.x) || (dir.x < 0 && coords.x < 0)) {
+        return true;
+    }
+    if ((dir.y > 0 && coords.y > bounds.y) || (dir.y < 0 && coords.y < 0)) {
+        return true;
+    }
+    if ((dir.z > 0 && coords.z > bounds.z) || (dir.z < 0 && coords.z < 0)) {
+        return true;
+    }
+    return false;
+}
+
 void main() {
     // Set init variable for raycasting loop
     ivec3 mapPos = ivec3(iRay.position);
@@ -41,7 +55,7 @@ void main() {
     bool hit = false;
     float dist = min(sideDist.x - deltaDist.x, min(sideDist.y - deltaDist.y, sideDist.z - deltaDist.z));
     vec4 tile = vec4(0, 0, 0, 1);
-    while (!hit && dist > iRay.zFar - iRay.zNear) {
+    while (!hit && dist <= iRay.zFar - iRay.zNear && !oob(mapPos.xzy, iRay.dir)) {
         if (sideDist.x < sideDist.y && sideDist.x < sideDist.z) {
             dist = sideDist.x - deltaDist.x;
             sideDist.x += deltaDist.x;
@@ -56,9 +70,13 @@ void main() {
             mapPos.y += tstep.y;
         }
         tile = texelFetch(map, mapPos.xzy, 0);
-        if (tile.a != 0) {
+        if (tile != vec4(0, 0, 0, 0)) {
             hit = true;
         }
+    }
+    if (oob(mapPos.xzy, iRay.dir)) {
+        gl_FragDepth = 1;
+        return;
     }
     onHit(dist, tile);
 }
