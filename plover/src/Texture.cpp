@@ -173,7 +173,7 @@ void Texture::copyBitmap(VulkanContext& context, Bitmap bitmap) {
 }
 
 void Texture::copyVoxelmap(VulkanContext &context, VoxelMap voxelmap) {
-    assert(voxelmap.width * voxelmap.height * voxelmap.stride() == imageSize 
+    assert(voxelmap.width * voxelmap.height * voxelmap.depth * voxelmap.stride() == imageSize 
            && "Image size mismatch when updating texture!");
     assert(voxelmap.vulkanFormat() == format 
            && "Format mismatch when updating texture!");
