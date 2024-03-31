@@ -1,7 +1,7 @@
 // vim:ft=glsl
 #version 460 core
 
-layout (binding = 1) uniform sampler2D map;
+layout (binding = 1) uniform sampler3D map;
 
 layout (location = 0) in RayInfo {
     vec3 position;
@@ -13,24 +13,8 @@ layout (location = 0) in RayInfo {
 layout (location = 0) out vec4 outColor;
 layout(depth_greater) out float gl_FragDepth;
 
-vec3 tileColors[4] = vec3[](
-    vec3(1, 0, 0),
-    vec3(0.7, 0, 0),
-    vec3(0.4, 0.4, 0.4),
-    vec3(0.2, 0.2, 0.2)
-);
-
-float getDist(int side, vec3 sideDist, vec3 deltaDist) {
-    if (side == 0) {
-        return sideDist.x - deltaDist.x;
-    } else if (side == 1) {
-        return sideDist.z - deltaDist.z;
-    } 
-    return sideDist.y - deltaDist.y;
-}
-
-void onHit(int side, float dist, vec4 tile) {
-    outColor = vec4(tileColors[side], 1);
+void onHit(float dist, vec4 tile) {
+    outColor = tile * (24 - dist) / 24;
     gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
 }
 
@@ -55,31 +39,26 @@ void main() {
 
     // Raycasting loop - increment dist until reach
     bool hit = false;
-    int side = 0;
+    float dist = min(sideDist.x - deltaDist.x, min(sideDist.y - deltaDist.y, sideDist.z - deltaDist.z));
     vec4 tile = vec4(0, 0, 0, 1);
-    while (!hit) {
-        if (getDist(side, sideDist, deltaDist) > iRay.zFar - iRay.zNear) {
-            hit = true;
-            break;
-        }
+    while (!hit && dist > iRay.zFar - iRay.zNear) {
         if (sideDist.x < sideDist.y && sideDist.x < sideDist.z) {
+            dist = sideDist.x - deltaDist.x;
             sideDist.x += deltaDist.x;
             mapPos.x += tstep.x;
-            side = 0;
         } else if (sideDist.z < sideDist.x && sideDist.z < sideDist.y) {
+            dist = sideDist.z - deltaDist.z;
             sideDist.z += deltaDist.z;
             mapPos.z += tstep.z;
-            side = 1;
         } else {
+            dist = sideDist.y - deltaDist.y;
             sideDist.y += deltaDist.y;
             mapPos.y += tstep.y;
-            side = tstep.y == 1? 3: 2;
-            hit = true;
         }
-        tile = texelFetch(map, mapPos.xz, 0);
-        if (tile.rgb != vec3(1, 1, 1)) {
+        tile = texelFetch(map, mapPos.xzy, 0);
+        if (tile.a != 0) {
             hit = true;
         }
     }
-    onHit(side, getDist(side, sideDist, deltaDist), tile);
+    onHit(dist, tile);
 }
