@@ -11,10 +11,9 @@
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
-RaycasterContext::RaycasterContext(VulkanContext *context, uint32_t width,
-								   uint32_t height, uint64_t seed) {
+RaycasterContext::RaycasterContext(Texture map, VulkanContext *context) {
 	this->context = context;
-	createMap(width, height, seed);
+    this->lvlTex = map;
 	createDescriptorSetLayout();
 	createUniformBuffers();
 	createVertexBuffer();
@@ -222,14 +221,6 @@ void RaycasterContext::createRaycasterPipeline() {
 // Create simple circle map
 void RaycasterContext::createMap(uint32_t width, uint32_t height,
 								 uint64_t seed) {
-	Bitmap mapBitmap;
-	createBitmap(&mapBitmap, width, height, BitmapFormat::RGBA8);
-	for (size_t x = 1; x < width - 1; x++) {
-		for (size_t y = 1; y < height - 1; y++) {
-			mapBitmap.writeGrayscale(255, x, y);
-		}
-	}
-	createTexture(*this->context, mapBitmap, lvlTex);
 	vkDestroySampler(context->device, lvlTex.sampler, nullptr);
 	VkSamplerCreateInfo lvi{.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
 							.magFilter = VK_FILTER_NEAREST,

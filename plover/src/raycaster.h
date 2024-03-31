@@ -28,8 +28,7 @@ struct RaycasterContext {
 	VkPipelineLayout pipelineLayout;
 
 	void updateUniform(uint32_t currentImage);
-	RaycasterContext(VulkanContext *context, uint32_t width, uint32_t height,
-					 uint64_t seed);
+	RaycasterContext(Texture map, VulkanContext *context);
 	~RaycasterContext();
 
   private:

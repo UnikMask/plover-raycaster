@@ -1,7 +1,6 @@
 #include "VulkanContext.h"
 #include "Mesh.h"
 #include "plover_int.h"
-#include "raycaster.h"
 
 #include <iostream>
 #include <map>
@@ -1141,14 +1140,14 @@ void VulkanContext::transitionImageLayout(VkImage image, VkFormat format,
 	endSingleTimeCommands(commandBuffer);
 }
 
-void VulkanContext::copyBufferToImage(VkBuffer buffer, VkImage image, u32 width, 
-                                      u32 height, u32 imageSize, u32 layers) {
-    copyBufferToImage(buffer, image, width, height, 1, imageSize, layers);
+void VulkanContext::copyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
+									  u32 height, u32 imageSize, u32 layers) {
+	copyBufferToImage(buffer, image, width, height, 1, imageSize, layers);
 }
 
 void VulkanContext::copyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
-									  u32 height, u32 depth, u32 imageSize, 
-                                      u32 layers) {
+									  u32 height, u32 depth, u32 imageSize,
+									  u32 layers) {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 	VkBufferImageCopy region{};
@@ -1392,7 +1391,6 @@ void VulkanContext::initVulkan() {
 	createUniformBuffers();
 	createDescriptorAllocator();
 	createGlobalDescriptorSets();
-	raycasterCtx = new RaycasterContext(this, 16, 16, 0);
 	createCommandBuffer();
 	createSyncObjects();
 	createUI(*this, &ui);
