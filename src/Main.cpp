@@ -118,8 +118,8 @@ internal_func void handleInput(GameState *state) {
 
 internal_func void drawUI(GameState *state) {
 	Vec4 color = Vec4(0.914, 0.831, 0.612, 1.0);
-	handles.UI_Text(color, UVec2(16, 26), "It's drawing! current time: %.4f",
-					state->deltaTime);
+	handles.UI_Text(color, UVec2(16, 26), "It's drawing! current FPS: %.2f",
+					1.0 / state->deltaTime);
 
 	// Draw frame
 	handles.UI_Rect(color, UVec2(10, 10), UVec2(1260, 10));
