@@ -94,17 +94,19 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 		return nullptr;
 	}
 	uint32_t colors[256];
-	for (size_t i = 0; i < 256; i++) {
-		colors[i] = getSize(p, contents);
+	for (size_t i = 0; i <= 255; i++) {
+		colors[i + 1] = getSize(p, contents);
 	}
+	colors[0] = getSize(p, contents);
+
 	contents.clear();
 
 	Voxel *data = (Voxel *)calloc(*amount_voxels, sizeof(Voxel));
 	for (size_t i = 0; i < *amount_voxels; i++) {
-		data[i].pos[0] = voxels[i] & 0xff;
+		data[i].pos[0] = *width - (voxels[i] & 0xff) - 1;
 		data[i].pos[1] = (voxels[i] >> 8) & 0xff;
 		data[i].pos[2] = (voxels[i] >> 16) & 0xff;
-		data[i].color = colors[voxels[i] >> 24];
+		data[i].color = colors[(voxels[i] >> 24)];
 	}
 	free(voxels);
 	return (uint8_t *)data;
