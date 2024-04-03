@@ -74,20 +74,20 @@ void RaycasterContext::createDescriptorSetLayout() {
 
 	VkDescriptorSetLayoutBinding levelBinding{
 		.binding = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 		.descriptorCount = 1,
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.pImmutableSamplers = 0};
 
-	VkDescriptorSetLayoutBinding textureMappings{
+	VkDescriptorSetLayoutBinding extrasBinding{
 		.binding = 2,
-		.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-		.descriptorCount = MAX_TEXTURES,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorCount = 1,
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		.pImmutableSamplers = 0};
+		.pImmutableSamplers = nullptr};
 
-	std::vector<VkDescriptorSetLayoutBinding> bindings = {uboBinding,
-														  levelBinding};
+	std::vector<VkDescriptorSetLayoutBinding> bindings = {
+		uboBinding, levelBinding, extrasBinding};
 
 	VkDescriptorSetLayoutCreateInfo info{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
@@ -129,6 +129,40 @@ void RaycasterContext::createVertexBuffer() {
 
 	context->copyBuffer(stagingBuf, vertexBuffer, size);
 	vmaDestroyBuffer(context->allocator, stagingBuf, stagingBufAlloc);
+}
+
+void RaycasterContext::createLevelExtrasBuf() {
+	CreateBufferInfo extrasCreateInfo{
+		.size = sizeof(RaycasterExtrasUniform),
+		.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+				 VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		.vmaFlags = 0};
+	context->createBuffer(extrasCreateInfo, levelExtrasBuf, levelExtrasAlloc);
+}
+
+void RaycasterContext::uploadToExtrasUniform() {
+	VkBuffer stagingBuf;
+	VmaAllocation stagingAlloc;
+	CreateBufferInfo stagingInfo{
+		.size = sizeof(RaycasterExtrasUniform),
+		.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+					  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		.vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT};
+	context->createBuffer(stagingInfo, stagingBuf, stagingAlloc);
+	RaycasterExtrasUniform u = {.extent = level.extent};
+	for (size_t i = 0; i < 256; i++) {
+		u.palette[i] = level.palette[i];
+	}
+
+	void *data;
+	vmaMapMemory(context->allocator, stagingAlloc, &data);
+	memcpy(data, &u, sizeof(RaycasterExtrasUniform));
+	vmaUnmapMemory(context->allocator, stagingAlloc);
+	context->copyBuffer(stagingBuf, levelExtrasBuf,
+						sizeof(RaycasterExtrasUniform));
+	vmaDestroyBuffer(context->allocator, stagingBuf, stagingAlloc);
 }
 
 void RaycasterContext::createDescriptorSets() {

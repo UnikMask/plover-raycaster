@@ -14,7 +14,7 @@ struct Level {
 	// Voxel allocs
 	VkBuffer buf;
 	VmaAllocation alloc;
-	glm::vec3 extent;
+	glm::ivec3 extent;
 
 	// Palette
 	uint32_t palette[256];
@@ -49,6 +49,8 @@ struct RaycasterContext {
 	void createUniformBuffers();
 	void createVertexBuffer();
 	void createDescriptorSets();
+	void createLevelExtrasBuf();
+	void uploadToExtrasUniform();
 	void createRaycasterPipeline();
 	void createDescriptorSetLayout();
 };
@@ -65,7 +67,7 @@ struct RaycasterUniform {
 };
 
 struct RaycasterExtrasUniform {
-	alignas(16) glm::ivec3 size;
+	alignas(16) glm::ivec3 extent;
 	alignas(4) uint32_t palette[256];
 };
 
