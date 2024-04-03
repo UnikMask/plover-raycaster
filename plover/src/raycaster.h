@@ -10,11 +10,25 @@
 
 const int MAX_TEXTURES = 3;
 
+struct Level {
+	// Voxel allocs
+	VkBuffer buf;
+	VmaAllocation alloc;
+	glm::vec3 extent;
+
+	// Palette
+	uint32_t palette[256];
+
+	VkDeviceSize size() { return extent.x * extent.y * extent.z; }
+	~Level();
+};
+
 struct RaycasterContext {
   public:
 	// Raycaster information
-	Texture lvlTex;
-	// std::vector<Texture *> textures;
+	Level &level;
+	VkBuffer levelExtrasBuf;
+	VmaAllocation levelExtrasAlloc;
 
 	VulkanContext *context;
 	std::vector<VkDescriptorSet> descriptorSets;
@@ -28,7 +42,7 @@ struct RaycasterContext {
 	VkPipelineLayout pipelineLayout;
 
 	void updateUniform(uint32_t currentImage);
-	RaycasterContext(Texture &map, VulkanContext *context);
+	RaycasterContext(Level &level, VulkanContext *context);
 	~RaycasterContext();
 
   private:
@@ -37,8 +51,6 @@ struct RaycasterContext {
 	void createDescriptorSets();
 	void createRaycasterPipeline();
 	void createDescriptorSetLayout();
-
-	void createMap(uint32_t width, uint32_t height, uint64_t seed);
 };
 
 struct RaycasterUniform {
@@ -50,6 +62,11 @@ struct RaycasterUniform {
 	alignas(4) float aspectRatio;
 	alignas(4) float minDistance;
 	alignas(4) float maxDistance;
+};
+
+struct RaycasterExtrasUniform {
+	alignas(16) glm::ivec3 size;
+	alignas(4) uint32_t palette[256];
 };
 
 struct RaycasterVertex {
