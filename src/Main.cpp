@@ -35,7 +35,8 @@ internal_func void init(GameMemory *mem) {
 	state->bindings = DEFAULT_BINDINGS;
 	state->mousePosition = Vec2(0, 0);
 	state->previousMousePosition = Vec2(0, 0);
-	state->camera.position = Vec3(4.5f, 1.5f, 4.5f);
+	state->camera.position = Vec3(3.5f, 15.5f, 3.5f);
+	state->cameraPitch = -0.54f, state->cameraYaw = 0.87;
 	state->buttonsPressed = 0;
 }
 
