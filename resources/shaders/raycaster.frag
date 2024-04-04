@@ -53,13 +53,14 @@ void main() {
 
     // Raycasting loop - increment dist until reach
     float dist = 0;
-    vec4 tile = vec4(0, 0, 0, 1);
-    while (dist <= iRay.zFar - iRay.zNear && !oob(mapPos, iRay.dir)) {
-        if (sideDist.x < sideDist.y && sideDist.x < sideDist.z) {
+    vec4 tile = vec4(0);
+    while (tile.a == 0 && dist <= iRay.zFar - iRay.zNear && !oob(mapPos, iRay.dir)) {
+        float minDist = min(sideDist.x, min(sideDist.y, sideDist.z));
+        if (minDist == sideDist.x) {
             dist = sideDist.x;
             sideDist.x += deltaDist.x;
             mapPos.x += tstep.x;
-        } else if (sideDist.z < sideDist.x && sideDist.z < sideDist.y) {
+        } else if (minDist == sideDist.z) {
             dist = sideDist.z;
             sideDist.z += deltaDist.z;
             mapPos.z += tstep.z;
@@ -69,12 +70,11 @@ void main() {
             mapPos.y += tstep.y;
         }
         tile = texelFetch(map, mapPos.xzy, 0);
-        if (tile.a != 0) {
-            break;
-        }
     }
-    if (oob(mapPos, iRay.dir)) {
-        return;
+    if (tile.a != 0) {
+        onHit(dist, tile);
+    } else {
+        outColor = vec4(0);
+        gl_FragDepth = 1.0f;
     }
-    onHit(dist, tile);
 }
