@@ -3,6 +3,7 @@
 #include "lapwing.h"
 #include "vox.h"
 #include <cstdlib>
+#include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -74,18 +75,18 @@ uintptr_t Writer::writeVoxelModel(Entry &content, std::string path) {
 		std::cerr << "Asset file " << path << " does not exist." << std::endl;
 		return -1;
 	}
-	u8 *model = vox_load(path, &modelMetadata.width, &modelMetadata.height,
-						 &modelMetadata.depth, &modelMetadata.amount_voxels);
-	if (model == nullptr) {
+    u32 palette[256];
+	u32 *voxels = vox_load(path, &modelMetadata, palette);
+	if (voxels == nullptr) {
 		return -1;
 	}
 
 	assets->write((char *)&modelMetadata, sizeof(VoxelModelMetadata));
-    uint32_t model_size = sizeof(Voxel) * modelMetadata.amount_voxels;
-	assets->write((char *)model, model_size);
-	content.size = sizeof(VoxelModelMetadata) + model_size;
-	free(model);
-
+	u32 model_size = sizeof(u32) * modelMetadata.amount_voxels;
+	assets->write((char *)voxels, model_size);
+    assets->write((char *)palette, sizeof(palette));
+	content.size = sizeof(VoxelModelMetadata) + model_size + sizeof(palette);
+	free(voxels);
 	return content.offset + content.size;
 }
 

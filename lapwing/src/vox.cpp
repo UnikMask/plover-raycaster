@@ -1,5 +1,5 @@
 #include "vox.h"
-#include "writer.h"
+#include "lapwing.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -28,13 +28,11 @@ struct ChunkMetadata {
 void ignoreChunk(ChunkMetadata chunk, uintptr_t &p,
 				 std::vector<char> &contents);
 
-uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
-				  uint32_t *depth, uint32_t *amount_voxels) {
+u32 *vox_load(std::string path, VoxelModelMetadata *metadata, u32 *palette) {
 	auto contents = loadFile(path);
 	if (!contents.size()) {
 		return nullptr;
 	}
-
 	uintptr_t p = 0;
 
 	// Read header
@@ -42,7 +40,7 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 		std::cerr << "File is not in VOX format!" << std::endl;
 		return nullptr;
 	}
-	uint32_t version = getSize(p, contents);
+	u32 version = getSize(p, contents);
 
 	auto main = ChunkMetadata(p, contents);
 	if (main.id != "MAIN" || main.size != 0) {
@@ -61,9 +59,9 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 				  << std::endl;
 		return nullptr;
 	}
-	*width = getSize(p, contents);
-	*height = getSize(p, contents);
-	*depth = getSize(p, contents);
+	metadata->width = getSize(p, contents);
+	metadata->height = getSize(p, contents);
+	metadata->depth = getSize(p, contents);
 
 	// Get voxel data
 	next = ChunkMetadata(p, contents);
@@ -71,9 +69,9 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 		std::cerr << "No XYZI chunk in VOX file - file malformed!" << std::endl;
 		return nullptr;
 	}
-	*amount_voxels = getSize(p, contents);
-	uint32_t *voxels = (uint32_t *)malloc(*amount_voxels * sizeof(uint32_t));
-	for (size_t i = 0; i < *amount_voxels; i++) {
+	metadata->amount_voxels = getSize(p, contents);
+	u32 *voxels = (u32 *)malloc(metadata->amount_voxels * sizeof(u32));
+	for (size_t i = 0; i < metadata->amount_voxels; i++) {
 		voxels[i] = getSize(p, contents);
 	}
 
@@ -93,23 +91,13 @@ uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
 		free(voxels);
 		return nullptr;
 	}
-	uint32_t colors[256];
 	for (size_t i = 0; i <= 255; i++) {
-		colors[i + 1] = getSize(p, contents);
+		palette[i + 1] = getSize(p, contents);
 	}
-	colors[0] = getSize(p, contents);
-
+	palette[0] = getSize(p, contents);
 	contents.clear();
-
-	Voxel *data = (Voxel *)calloc(*amount_voxels, sizeof(Voxel));
-	for (size_t i = 0; i < *amount_voxels; i++) {
-		data[i].pos[0] = *width - (voxels[i] & 0xff) - 1;
-		data[i].pos[1] = (voxels[i] >> 8) & 0xff;
-		data[i].pos[2] = (voxels[i] >> 16) & 0xff;
-		data[i].color = colors[(voxels[i] >> 24)];
-	}
-	free(voxels);
-	return (uint8_t *)data;
+	std::cout << "Vox file loading finished!" << std::endl;
+	return voxels;
 }
 
 std::vector<char> loadFile(std::string path) {

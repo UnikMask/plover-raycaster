@@ -1,7 +1,7 @@
 #pragma once
 
+#include "lapwing.h"
 #include <cstdint>
 #include <string>
 
-uint8_t *vox_load(std::string path, uint32_t *width, uint32_t *height,
-				  uint32_t *depth, uint32_t *amount_voxels);
+uint32_t *vox_load(std::string path, VoxelModelMetadata *metadata, u32 *palette);
