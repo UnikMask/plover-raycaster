@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
-RaycasterContext::RaycasterContext(Level &level, VulkanContext *context) {
+RaycasterContext::RaycasterContext(Level level, VulkanContext *context) {
 	this->context = context;
 	this->level = level;
 	createDescriptorSetLayout();
@@ -275,3 +275,5 @@ RaycasterVertex::getAttributeDescriptions() {
 			  .offset = offsetof(RaycasterVertex, display)};
 	return res;
 }
+
+void Level::cleanup() { vmaDestroyBuffer(*allocator, buf, alloc); }

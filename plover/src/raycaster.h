@@ -20,13 +20,16 @@ struct Level {
 	uint32_t palette[256];
 
 	VkDeviceSize size() { return extent.x * extent.y * extent.z; }
-	~Level();
+	void cleanup();
+
+  private:
+	VmaAllocator *allocator;
 };
 
 struct RaycasterContext {
   public:
 	// Raycaster information
-	Level &level;
+	Level level;
 	VkBuffer levelExtrasBuf;
 	VmaAllocation levelExtrasAlloc;
 
@@ -42,7 +45,7 @@ struct RaycasterContext {
 	VkPipelineLayout pipelineLayout;
 
 	void updateUniform(uint32_t currentImage);
-	RaycasterContext(Level &level, VulkanContext *context);
+	RaycasterContext(Level level, VulkanContext *context);
 	~RaycasterContext();
 
   private:
