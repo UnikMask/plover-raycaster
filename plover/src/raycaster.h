@@ -74,7 +74,7 @@ struct RaycasterUniform {
 
 struct RaycasterExtrasUniform {
 	alignas(16) glm::ivec3 extent;
-	alignas(4) uint32_t palette[256];
+	alignas(4) glm::uint palette[256];
 };
 
 struct RaycasterVertex {

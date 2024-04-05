@@ -1,7 +1,13 @@
 // vim:ft=glsl
 #version 460 core
 
-layout (binding = 1) uniform sampler3D map;
+layout(std140, binding = 1) readonly buffer SSBOmap {
+    uint map[];
+};
+layout(binding = 2) uniform Extras {
+    ivec3 extent;
+    uint palette[256];
+} uExtras;
 
 layout (location = 0) in RayInfo {
     vec3 position;
@@ -13,13 +19,25 @@ layout (location = 0) in RayInfo {
 layout (location = 0) out vec4 outColor;
 layout(depth_greater) out float gl_FragDepth;
 
-void onHit(float dist, vec4 tile) {
-    outColor = tile * (48 - dist) / 48;
+uint fetch(ivec3 coords) {
+    uint i = uExtras.extent.x * uExtras.extent.y * coords.y + uExtras.extent.x * coords.z + coords.y;
+    uint offset = uint(8 * mod(i, 4));
+    i /= 4;
+    return (map[i] >> offset) & 0xff;  
+}
+
+vec4 color(uint c) {
+    return vec4(c & 0xff, (c >> 8) & 0xff, (c >> 16) & 0xff, (c >> 24) & 0xff);
+}
+
+void onHit(float dist, uint tile) {
+
+    outColor = color(uExtras.palette[tile]) * (48 - dist) / 48;
     gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
 }
 
 bool oob(ivec3 coords, vec3 dir) {
-    vec3 bounds = textureSize(map, 0).xzy;
+    vec3 bounds = uExtras.extent.xzy;
     if ((dir.x >= 0 && coords.x > bounds.x) || (dir.x < 0 && coords.x < 0)) {
         return true;
     }
@@ -53,8 +71,8 @@ void main() {
 
     // Raycasting loop - increment dist until reach
     float dist = 0;
-    vec4 tile = vec4(0);
-    while (tile.a == 0 && dist <= iRay.zFar - iRay.zNear && !oob(mapPos, iRay.dir)) {
+    uint tile = 0;
+    while (tile == 0 && dist <= iRay.zFar - iRay.zNear && !oob(mapPos, iRay.dir)) {
         float minDist = min(sideDist.x, min(sideDist.y, sideDist.z));
         if (minDist == sideDist.x) {
             dist = sideDist.x;
@@ -69,9 +87,9 @@ void main() {
             sideDist.y += deltaDist.y;
             mapPos.y += tstep.y;
         }
-        tile = texelFetch(map, mapPos.xzy, 0);
+        tile = fetch(mapPos);
     }
-    if (tile.a != 0) {
+    if (tile != 0) {
         onHit(dist, tile);
     } else {
         outColor = vec4(0);
