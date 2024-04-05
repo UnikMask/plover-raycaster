@@ -17,6 +17,8 @@ RaycasterContext::RaycasterContext(Level level, VulkanContext *context) {
 	this->level = level;
 	createDescriptorSetLayout();
 	createUniformBuffers();
+	createLevelExtrasBuf();
+	uploadToExtrasUniform();
 	createVertexBuffer();
 	createDescriptorSets();
 	createRaycasterPipeline();
@@ -283,6 +285,7 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 					u32 *voxels, u32 palette[256]) {
 	Level level;
 	level.allocator = context.allocator;
+	level.extent = glm::vec3(metadata.width, metadata.height, metadata.depth);
 
 	u64 dataSize =
 		metadata.width * metadata.height * metadata.depth * sizeof(u8);
@@ -295,7 +298,7 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 
 	VkBuffer staging;
 	VmaAllocation stagingAlloc;
-	bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 	bufInfo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 						 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 	bufInfo.vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;

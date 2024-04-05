@@ -16,9 +16,11 @@ void Renderer::init() {
 	context->initWindow();
 	context->initVulkan();
 
-    VoxelModelMetadata metadata;
-    u32 palette[256];
-    u32 *data = loader.loadVoxelModel("map.vox", &metadata, palette);
+	VoxelModelMetadata metadata;
+	u32 palette[256];
+	u32 *data = loader.loadVoxelModel("map.vox", &metadata, palette);
+	Level level = Level::create(*context, metadata, data, palette);
+	context->raycasterCtx = new RaycasterContext(level, context);
 }
 
 bool Renderer::render() { return context->render(); }
