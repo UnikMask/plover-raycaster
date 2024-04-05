@@ -18,7 +18,7 @@ struct Level {
 	glm::ivec3 extent;
 
 	// Palette
-	uint32_t palette[256];
+	glm::vec4 palette[256];
 
 	static Level create(VulkanContext &context, VoxelModelMetadata &metadata,
 						u32 *voxels, u32 palette[256]);
@@ -74,7 +74,7 @@ struct RaycasterUniform {
 
 struct RaycasterExtrasUniform {
 	alignas(16) glm::ivec3 extent;
-	alignas(4) glm::uint palette[256];
+	alignas(16) glm::vec4 palette[256];
 };
 
 struct RaycasterVertex {

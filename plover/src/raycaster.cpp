@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
@@ -318,7 +319,11 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 			index;
 	}
 	for (size_t i = 0; i < 256; i++) {
-		level.palette[i] = palette[i];
+		float r = float(palette[i] & 0xff) / 255;
+		float g = float((palette[i] >> 8) & 0xff) / 255;
+		float b = float((palette[i] >> 16) & 0xff) / 255;
+		float a = float((palette[i] >> 24) & 0xff) / 255;
+		level.palette[i] = glm::vec4(r, g, b, a);
 	}
 	vmaUnmapMemory(context.allocator, stagingAlloc);
 	context.copyBuffer(staging, level.buf, dataSize);

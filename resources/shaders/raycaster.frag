@@ -6,7 +6,7 @@ layout(std140, binding = 1) readonly buffer SSBOmap {
 };
 layout(binding = 2) uniform Extras {
     ivec3 extent;
-    uint palette[256];
+    vec4 palette[256];
 } uExtras;
 
 layout (location = 0) in RayInfo {
@@ -26,13 +26,9 @@ uint fetch(ivec3 coords) {
     return (map[i] >> offset) & 0xff;  
 }
 
-vec4 color(uint c) {
-    return vec4(c & 0xff, (c >> 8) & 0xff, (c >> 16) & 0xff, (c >> 24) & 0xff);
-}
-
 void onHit(float dist, uint tile) {
 
-    outColor = color(uExtras.palette[tile]) * (48 - dist) / 48;
+    outColor = uExtras.palette[tile] * (48 - dist) / 48;
     gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
 }
 
