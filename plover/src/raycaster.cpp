@@ -289,7 +289,7 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 	level.extent = glm::vec3(metadata.width, metadata.height, metadata.depth);
 
 	u64 dataSize =
-		metadata.width * metadata.height * metadata.depth * sizeof(u8);
+		metadata.width * metadata.height * metadata.depth * sizeof(u32);
 	CreateBufferInfo bufInfo{.size = dataSize,
 							 .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -305,7 +305,7 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 	bufInfo.vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 	context.createBuffer(bufInfo, staging, stagingAlloc);
 
-	u8 *data;
+	u32 *data;
 	vmaMapMemory(context.allocator, stagingAlloc, (void **)&data);
 	for (size_t i = 0; i < dataSize; i++) {
 		data[i] = 0;

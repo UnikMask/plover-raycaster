@@ -21,9 +21,7 @@ layout(depth_greater) out float gl_FragDepth;
 
 uint fetch(ivec3 coords) {
     uint i = uExtras.extent.x * uExtras.extent.y * coords.y + uExtras.extent.x * coords.z + coords.y;
-    uint offset = uint(8 * mod(i, 4));
-    i /= 4;
-    return (map[i] >> offset) & 0xff;  
+    return map[i];  
 }
 
 void onHit(float dist, uint tile) {
