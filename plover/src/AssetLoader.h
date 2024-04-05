@@ -21,7 +21,7 @@ struct AssetLoader {
 
 	char* loadTexture(const char* name, TextureMetadata* info);
 	ModelData loadModel(const char* name, ModelMetadata* info);
-    Voxel *loadVoxelModel(const char *name, VoxelModelMetadata *info);
+    u32 *loadVoxelModel(const char *name, VoxelModelMetadata *info, u32 *palette);
 	
 	u64 hashAsset(const char* name);
 

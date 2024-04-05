@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "UI.h"
 #include "VulkanContext.h"
+#include "glm/fwd.hpp"
 #include "lapwing.h"
 #include "raycaster.h"
 
@@ -16,13 +17,8 @@ void Renderer::init() {
 	context->initVulkan();
 
     VoxelModelMetadata metadata;
-    Voxel *data = loader.loadVoxelModel("map.vox", &metadata);
-    VoxelMap map = VoxelMap(metadata, data, BitmapFormat::RGBA8);
-
-    Texture lvlTex;
-    createTexture(*context, map, lvlTex);
-
-	context->raycasterCtx = new RaycasterContext(lvlTex, context);
+    u32 palette[256];
+    u32 *data = loader.loadVoxelModel("map.vox", &metadata, palette);
 }
 
 bool Renderer::render() { return context->render(); }

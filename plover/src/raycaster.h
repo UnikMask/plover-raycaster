@@ -7,6 +7,7 @@
 
 #include "Texture.h"
 #include "glm/fwd.hpp"
+#include "lapwing.h"
 
 const int MAX_TEXTURES = 3;
 
@@ -19,11 +20,13 @@ struct Level {
 	// Palette
 	uint32_t palette[256];
 
+	static Level create(VulkanContext &context, VoxelModelMetadata &metadata,
+						u32 *voxels, u32 palette[256]);
 	VkDeviceSize size() { return extent.x * extent.y * extent.z; }
 	void cleanup();
 
   private:
-	VmaAllocator *allocator;
+	VmaAllocator allocator;
 };
 
 struct RaycasterContext {

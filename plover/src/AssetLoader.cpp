@@ -68,7 +68,7 @@ ModelData AssetLoader::loadModel(const char* name, ModelMetadata* info) {
 	return data; 
 }
 
-Voxel *AssetLoader::loadVoxelModel(const char *name, VoxelModelMetadata *info) {
+u32 *AssetLoader::loadVoxelModel(const char *name, VoxelModelMetadata *info, u32 *palette) {
     u64 assetHash = hashAsset(name);
     auto entryPair = tableOfContents.find(assetHash);
     
@@ -81,8 +81,9 @@ Voxel *AssetLoader::loadVoxelModel(const char *name, VoxelModelMetadata *info) {
     assets->seekg(entry.offset, std::ios_base::beg);
     assets->read((char *) info, sizeof(VoxelModelMetadata));
 
-    Voxel *voxels = (Voxel *) malloc(info->amount_voxels * sizeof(Voxel));
-    assets->read((char *) voxels, info->amount_voxels * sizeof(Voxel));
+    u32 *voxels = (u32*) malloc(info->amount_voxels * sizeof(u32));
+    assets->read((char *) voxels, info->amount_voxels * sizeof(u32));
+    assets->read((char *) palette, sizeof(u32[256]));
     return voxels;
 }
 

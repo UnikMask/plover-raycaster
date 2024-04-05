@@ -36,34 +36,6 @@ struct Bitmap {
 	void clear();
 };
 
-struct VoxelMap {
-    Voxel *voxels;
-
-	uint32_t width;
-	uint32_t height;
-	uint32_t depth;
-
-    uint32_t amount_voxels;
-    uint32_t alloc_size;
-	BitmapFormat format;
-
-	inline u32 stride() { return ::stride(format); }
-
-	inline VkFormat vulkanFormat() {
-        return ::vulkanFormat(format);
-	}
-
-	inline u32 index(u32 x, u32 y, u32 z) { 
-        return z * (width * height) + y * width + x; 
-    }
-
-    VoxelMap(u32 width, u32 height, u32 depth, BitmapFormat format);
-    VoxelMap(VoxelModelMetadata metadata, Voxel *voxels, BitmapFormat format); 
-	~VoxelMap();
-	void writeGrayscale(u8 value, u32 x, u32 y, u32 z);
-	void writeRGBA(UVec4 color, u32 x, u32 y, u32 z);
-};
-
 void createBitmap(Bitmap *bitmap, u32 width, u32 height, BitmapFormat format);
 
 struct Texture {
@@ -76,12 +48,10 @@ struct Texture {
 	VkSampler sampler;
 
 	void copyBitmap(VulkanContext &context, Bitmap bitmap);
-	void copyVoxelmap(VulkanContext &context, VoxelMap &voxelmap);
 	void cleanup(VulkanContext &context);
 };
 
 void createTexture(VulkanContext &context, Bitmap bitmap, Texture &texture);
-void createTexture(VulkanContext &context, VoxelMap &voxelmap, Texture &texture);
 void createImageTexture(VulkanContext &context, AssetLoader loader,
 						Texture &texture, const char *name,
 						BitmapFormat format);

@@ -4,6 +4,7 @@
 #include "VulkanContext.h"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
+#include "plover/plover.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -276,4 +277,49 @@ RaycasterVertex::getAttributeDescriptions() {
 	return res;
 }
 
-void Level::cleanup() { vmaDestroyBuffer(*allocator, buf, alloc); }
+void Level::cleanup() { vmaDestroyBuffer(allocator, buf, alloc); }
+
+Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
+					u32 *voxels, u32 palette[256]) {
+	Level level;
+	level.allocator = context.allocator;
+
+	u64 dataSize =
+		metadata.width * metadata.height * metadata.depth * sizeof(u8);
+	CreateBufferInfo bufInfo{.size = dataSize,
+							 .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+									  VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+							 .properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+							 .vmaFlags = 0};
+	context.createBuffer(bufInfo, level.buf, level.alloc);
+
+	VkBuffer staging;
+	VmaAllocation stagingAlloc;
+	bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	bufInfo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+						 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	bufInfo.vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+	context.createBuffer(bufInfo, staging, stagingAlloc);
+
+	u8 *data;
+	vmaMapMemory(context.allocator, stagingAlloc, (void **)&data);
+	for (size_t i = 0; i < dataSize; i++) {
+		data[i] = 0;
+	}
+	for (size_t i = 0; i < metadata.amount_voxels; i++) {
+		u8 w = voxels[i] & 0xff;
+		u8 h = (voxels[i] >> 8) & 0xff;
+		u8 d = (voxels[i] >> 16) & 0xff;
+		u8 index = (voxels[i] >> 24) & 0xff;
+		data[(metadata.width * metadata.height) * d + metadata.width * h + w] =
+			index;
+	}
+	for (size_t i = 0; i < 256; i++) {
+		level.palette[i] = palette[i];
+	}
+	vmaUnmapMemory(context.allocator, stagingAlloc);
+	context.copyBuffer(staging, level.buf, dataSize);
+	vmaDestroyBuffer(context.allocator, staging, stagingAlloc);
+
+	return level;
+}
