@@ -38,6 +38,18 @@ bool oob() {
     return clamp(mapPos, oobLower, oobUpper) != mapPos;
 }
 
+bool bounds_x(vec3 coords) {
+    return coords.x >= 0 && coords.x <= bounds.x;
+}
+
+bool bounds_y(vec3 coords) {
+    return coords.y >= 0 && coords.y <= bounds.y;
+}
+
+bool bounds_z(vec3 coords) {
+    return coords.z >= 0 && coords.z <= bounds.z;
+}
+
 void main() {
     gt0 = vec3(float(iRay.dir.x >= 0), float(iRay.dir.y >= 0), float(iRay.dir.z >= 0));
     oobUpper = gt0 * bounds + (1 - gt0) * iRay.zFar;
@@ -48,26 +60,44 @@ void main() {
         return;
     }
 
-    mapPos = ivec3(iRay.position);
-    sideDist = mapPos + vec3(1, 1, 1) - iRay.position;
+    // Get offset from bound to model
+    float offset = iRay.zFar;
+    vec3 lambda = ((1 - gt0) * bounds - iRay.position) / iRay.dir;
+    vec3 coords = iRay.position + lambda.x * iRay.dir;
+    if (bounds_y(coords) && bounds_z(coords)) {
+        offset = min(lambda.x, offset);
+    } 
+    coords = iRay.position + lambda.y * iRay.dir;
+    if (bounds_x(coords) && bounds_z(coords)) {
+        offset = min(lambda.y, offset);
+    } 
+    coords = iRay.position + lambda.z * iRay.dir;
+    if (bounds_x(coords) && bounds_y(coords)) {
+        offset = min(lambda.z, offset);
+    }
+    offset = max(0, offset);
+
+    vec3 position = iRay.position + offset * iRay.dir;
+    mapPos = ivec3(position);
+    sideDist = mapPos + vec3(1, 1, 1) - position;
     tstep = ivec3(1, 1, 1);
     if (iRay.dir.x < 0) {
         tstep.x = -1;
-        sideDist.x = iRay.position.x - mapPos.x;
+        sideDist.x = position.x - mapPos.x;
     }
     if (iRay.dir.y < 0) {
         tstep.y = -1;
-        sideDist.y = iRay.position.y - mapPos.y;
+        sideDist.y = position.y - mapPos.y;
     }
     if (iRay.dir.z < 0) {
         tstep.z = -1;
-        sideDist.z = iRay.position.z - mapPos.z;
+        sideDist.z = position.z - mapPos.z;
     }
-    sideDist = sideDist * deltaDist;
+    sideDist = sideDist * deltaDist + offset;
 
     // Raycasting loop - increment dist until reach
-    float dist = 0;
-    vec4 tile = vec4(0);
+    float dist = offset;
+    vec4 tile = texelFetch(map, mapPos.xzy, 0);
     while (tile.a == 0 && dist <= iRay.zFar - iRay.zNear && !oob()) {
         float minDist = min(sideDist.x, min(sideDist.y, sideDist.z));
         if (minDist == sideDist.x) {
