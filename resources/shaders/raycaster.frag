@@ -20,16 +20,9 @@ void onHit(float dist, vec4 tile) {
 
 bool oob(ivec3 coords, vec3 dir) {
     vec3 bounds = textureSize(map, 0).xzy;
-    if ((dir.x >= 0 && coords.x > bounds.x) || (dir.x < 0 && coords.x < 0)) {
-        return true;
-    }
-    if ((dir.y >= 0 && coords.y > bounds.y) || (dir.y < 0 && coords.y < 0)) {
-        return true;
-    }
-    if ((dir.z >= 0 && coords.z > bounds.z) || (dir.z < 0 && coords.z < 0)) {
-        return true;
-    }
-    return false;
+    return (dir.x >= 0 && coords.x > bounds.x) || (dir.x < 0 && coords.x < 0) 
+        || (dir.y >= 0 && coords.y > bounds.y) || (dir.y < 0 && coords.y < 0)
+        || (dir.z >= 0 && coords.z > bounds.z) || (dir.z < 0 && coords.z < 0);
 }
 
 void main() {
