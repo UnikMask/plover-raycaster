@@ -1,7 +1,9 @@
 // vim:ft=glsl
 #version 460 core
+precision mediump float;
+precision lowp int;
 
-layout(std140, binding = 1) readonly buffer SSBOmap {
+layout(std430, binding = 1) readonly buffer SSBOmap {
     uint map[];
 };
 layout(binding = 2) uniform Extras {
@@ -19,13 +21,7 @@ layout (location = 0) in RayInfo {
 layout (location = 0) out vec4 outColor;
 layout(depth_greater) out float gl_FragDepth;
 
-uint fetch(ivec3 coords) {
-    uint i = uExtras.extent.x * uExtras.extent.y * coords.y + uExtras.extent.x * coords.z + coords.y;
-    return map[i];  
-}
-
 void onHit(float dist, uint tile) {
-
     outColor = uExtras.palette[tile] * (48 - dist) / 48;
     gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
 }
@@ -42,6 +38,12 @@ bool oob(ivec3 coords, vec3 dir) {
         return true;
     }
     return false;
+}
+
+bool in_bounds(ivec3 coords) {
+    return coords.x >= 0 && coords.x < uExtras.extent.x 
+        && coords.y >= 0 && coords.y < uExtras.extent.z 
+        && coords.z >= 0 && coords.z < uExtras.extent.y;
 }
 
 void main() {
@@ -81,7 +83,10 @@ void main() {
             sideDist.y += deltaDist.y;
             mapPos.y += tstep.y;
         }
-        tile = fetch(mapPos);
+        uint i = uExtras.extent.x * uExtras.extent.y * mapPos.y 
+            + uExtras.extent.x * mapPos.z 
+            + mapPos.x;
+        tile = in_bounds(mapPos)? map[i]: 0;
     }
     if (tile != 0) {
         onHit(dist, tile);

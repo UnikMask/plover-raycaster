@@ -8,6 +8,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -288,9 +289,8 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 	level.allocator = context.allocator;
 	level.extent = glm::vec3(metadata.width, metadata.height, metadata.depth);
 
-	u64 dataSize =
-		metadata.width * metadata.height * metadata.depth * sizeof(u32);
-	CreateBufferInfo bufInfo{.size = dataSize,
+	u64 dataSize = metadata.width * metadata.height * metadata.depth;
+	CreateBufferInfo bufInfo{.size = dataSize * sizeof(u32),
 							 .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 							 .properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -305,18 +305,17 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 	bufInfo.vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 	context.createBuffer(bufInfo, staging, stagingAlloc);
 
-	u32 *data;
-	vmaMapMemory(context.allocator, stagingAlloc, (void **)&data);
-	for (size_t i = 0; i < dataSize; i++) {
-		data[i] = 0;
-	}
+	void *data;
+	vmaMapMemory(context.allocator, stagingAlloc, &data);
+
+	u32 *mapcpy = (u32 *)calloc(dataSize, sizeof(u32));
 	for (size_t i = 0; i < metadata.amount_voxels; i++) {
-		u8 w = voxels[i] & 0xff;
+		u8 w = metadata.width - (voxels[i] & 0xff) - 1;
 		u8 h = (voxels[i] >> 8) & 0xff;
 		u8 d = (voxels[i] >> 16) & 0xff;
 		u8 index = (voxels[i] >> 24) & 0xff;
-		data[(metadata.width * metadata.height) * d + metadata.width * h + w] =
-			index;
+		mapcpy[(metadata.width * metadata.height) * d + metadata.width * h +
+			   w] = index;
 	}
 	for (size_t i = 0; i < 256; i++) {
 		float r = float(palette[i] & 0xff) / 255;
@@ -325,6 +324,7 @@ Level Level::create(VulkanContext &context, VoxelModelMetadata &metadata,
 		float a = float((palette[i] >> 24) & 0xff) / 255;
 		level.palette[i] = glm::vec4(r, g, b, a);
 	}
+	memcpy(data, mapcpy, dataSize * sizeof(u32));
 	vmaUnmapMemory(context.allocator, stagingAlloc);
 	context.copyBuffer(staging, level.buf, dataSize);
 	vmaDestroyBuffer(context.allocator, staging, stagingAlloc);
