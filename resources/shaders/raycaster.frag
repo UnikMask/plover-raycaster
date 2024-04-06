@@ -15,14 +15,8 @@ layout(depth_greater) out float gl_FragDepth;
 
 // Raycasting loop vars
 vec3 bounds = textureSize(map, 0).xzy;
-ivec3 mapPos;
+ivec3 mapPos = ivec3(iRay.position);
 vec3 deltaDist = 1 / abs(iRay.dir);
-vec3 sideDist;
-ivec3 tstep;
-
-// OOB pre-compute
-vec3 gt0, oobUpper, oobLower; 
-vec3 ibThresh;
 
 void onHit(float dist, vec4 tile) {
     outColor = tile * (48 - dist) / 48;
@@ -34,45 +28,42 @@ void emptyColor() {
     gl_FragDepth = 1.0f;
 }
 
-bool oob() {
-    return clamp(mapPos, oobLower, oobUpper) != mapPos;
+bool bounds_yz(vec3 coords) {
+    return coords.z >= 0 && coords.z <= bounds.z
+    && coords.y >= 0 && coords.y <= bounds.y;
 }
 
-bool bounds_x(vec3 coords) {
-    return coords.x >= 0 && coords.x <= bounds.x;
+bool bounds_xz(vec3 coords) {
+    return coords.x >= 0 && coords.x <= bounds.x
+    && coords.z >= 0 && coords.z <= bounds.z;
 }
 
-bool bounds_y(vec3 coords) {
-    return coords.y >= 0 && coords.y <= bounds.y;
-}
-
-bool bounds_z(vec3 coords) {
-    return coords.z >= 0 && coords.z <= bounds.z;
+bool bounds_xy(vec3 coords) {
+    return coords.x >= 0 && coords.x <= bounds.x
+    && coords.y >= 0 && coords.y <= bounds.y;
 }
 
 void main() {
-    gt0 = vec3(float(iRay.dir.x >= 0), float(iRay.dir.y >= 0), float(iRay.dir.z >= 0));
-    oobUpper = gt0 * bounds + (1 - gt0) * iRay.zFar;
-    oobLower = -gt0 * iRay.zFar;
+    vec3 gt0 = vec3(float(iRay.dir.x >= 0), float(iRay.dir.y >= 0), float(iRay.dir.z >= 0));
 
-    if (oob()) {
+    // Return early if ray guaranteed never to hit anything
+    vec3 oobUpper = gt0 * bounds + (1 - gt0) * iRay.zFar;
+    vec3 oobLower = -gt0 * iRay.zFar;
+    if (clamp(mapPos, oobLower, oobUpper) != mapPos) {
         emptyColor();
         return;
     }
 
-    // Get offset from bound to model
+    // Get offset from ray original position to model bounds
     float offset = iRay.zFar;
     vec3 lambda = ((1 - gt0) * bounds - iRay.position) / iRay.dir;
-    vec3 coords = iRay.position + lambda.x * iRay.dir;
-    if (bounds_y(coords) && bounds_z(coords)) {
+    if (bounds_yz(iRay.position + lambda.x * iRay.dir)) {
         offset = min(lambda.x, offset);
     } 
-    coords = iRay.position + lambda.y * iRay.dir;
-    if (bounds_x(coords) && bounds_z(coords)) {
+    if (bounds_xz(iRay.position + lambda.y * iRay.dir)) {
         offset = min(lambda.y, offset);
     } 
-    coords = iRay.position + lambda.z * iRay.dir;
-    if (bounds_x(coords) && bounds_y(coords)) {
+    if (bounds_xy(iRay.position + lambda.z * iRay.dir)) {
         offset = min(lambda.z, offset);
     }
     offset = max(0, offset);
@@ -82,23 +73,11 @@ void main() {
     float maxDist = min(iRay.zFar - iRay.zNear, 
                         min(lambda.x, min(lambda.y, lambda.z)));
 
+    // Set side distance and step on xyz-axis per loop
     vec3 position = iRay.position + offset * iRay.dir;
     mapPos = ivec3(position);
-    sideDist = mapPos + vec3(1, 1, 1) - position;
-    tstep = ivec3(1, 1, 1);
-    if (iRay.dir.x < 0) {
-        tstep.x = -1;
-        sideDist.x = position.x - mapPos.x;
-    }
-    if (iRay.dir.y < 0) {
-        tstep.y = -1;
-        sideDist.y = position.y - mapPos.y;
-    }
-    if (iRay.dir.z < 0) {
-        tstep.z = -1;
-        sideDist.z = position.z - mapPos.z;
-    }
-    sideDist = sideDist * deltaDist + offset;
+    ivec3 tstep = ivec3(2 * gt0 - 1);
+    vec3 sideDist = (tstep * (mapPos - position) + gt0) * deltaDist + offset;
 
     // Raycasting loop - increment dist until reach
     float dist = offset;
