@@ -13,11 +13,16 @@ layout (location = 0) in RayInfo {
 layout (location = 0) out vec4 outColor;
 layout(depth_greater) out float gl_FragDepth;
 
+// Raycasting loop vars
 vec3 bounds = textureSize(map, 0).xzy;
-ivec3 mapPos = ivec3(iRay.position);
+ivec3 mapPos;
 vec3 deltaDist = 1 / abs(iRay.dir);
 vec3 sideDist;
 ivec3 tstep;
+
+// OOB pre-compute
+vec3 gt0, oobUpper, oobLower; 
+vec3 ibThresh;
 
 void onHit(float dist, vec4 tile) {
     outColor = tile * (48 - dist) / 48;
@@ -30,31 +35,35 @@ void emptyColor() {
 }
 
 bool oob() {
-    return (iRay.dir.x >= 0 && mapPos.x > bounds.x) || (iRay.dir.x < 0 && mapPos.x < 0) 
-        || (iRay.dir.y >= 0 && mapPos.y > bounds.y) || (iRay.dir.y < 0 && mapPos.y < 0)
-        || (iRay.dir.z >= 0 && mapPos.z > bounds.z) || (iRay.dir.z < 0 && mapPos.z < 0);
+    return clamp(mapPos, oobLower, oobUpper) != mapPos;
 }
 
 void main() {
+    gt0 = vec3(float(iRay.dir.x >= 0), float(iRay.dir.y >= 0), float(iRay.dir.z >= 0));
+    oobUpper = gt0 * bounds + (1 - gt0) * iRay.zFar;
+    oobLower = -gt0 * iRay.zFar;
+
     if (oob()) {
         emptyColor();
         return;
     }
 
-    sideDist = (mapPos + vec3(1, 1, 1) - iRay.position) * deltaDist;
+    mapPos = ivec3(iRay.position);
+    sideDist = mapPos + vec3(1, 1, 1) - iRay.position;
     tstep = ivec3(1, 1, 1);
     if (iRay.dir.x < 0) {
         tstep.x = -1;
-        sideDist.x = (iRay.position.x - mapPos.x) * deltaDist.x;
+        sideDist.x = iRay.position.x - mapPos.x;
     }
     if (iRay.dir.y < 0) {
         tstep.y = -1;
-        sideDist.y = (iRay.position.y - mapPos.y) * deltaDist.y;
+        sideDist.y = iRay.position.y - mapPos.y;
     }
     if (iRay.dir.z < 0) {
         tstep.z = -1;
-        sideDist.z = (iRay.position.z - mapPos.z) * deltaDist.z;
+        sideDist.z = iRay.position.z - mapPos.z;
     }
+    sideDist = sideDist * deltaDist;
 
     // Raycasting loop - increment dist until reach
     float dist = 0;
