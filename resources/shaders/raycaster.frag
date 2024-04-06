@@ -77,6 +77,11 @@ void main() {
     }
     offset = max(0, offset);
 
+    // Get max distance
+    lambda = (gt0 * bounds - iRay.position) / iRay.dir;
+    float maxDist = min(iRay.zFar - iRay.zNear, 
+                        min(lambda.x, min(lambda.y, lambda.z)));
+
     vec3 position = iRay.position + offset * iRay.dir;
     mapPos = ivec3(position);
     sideDist = mapPos + vec3(1, 1, 1) - position;
@@ -98,7 +103,7 @@ void main() {
     // Raycasting loop - increment dist until reach
     float dist = offset;
     vec4 tile = texelFetch(map, mapPos.xzy, 0);
-    while (tile.a == 0 && dist <= iRay.zFar - iRay.zNear && !oob()) {
+    while (tile.a == 0 && dist <= maxDist) {
         float minDist = min(sideDist.x, min(sideDist.y, sideDist.z));
         if (minDist == sideDist.x) {
             dist = sideDist.x;
