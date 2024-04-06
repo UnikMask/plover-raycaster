@@ -13,24 +13,36 @@ layout (location = 0) in RayInfo {
 layout (location = 0) out vec4 outColor;
 layout(depth_greater) out float gl_FragDepth;
 
+vec3 bounds = textureSize(map, 0).xzy;
+ivec3 mapPos = ivec3(iRay.position);
+vec3 deltaDist = 1 / abs(iRay.dir);
+vec3 sideDist;
+ivec3 tstep;
+
 void onHit(float dist, vec4 tile) {
     outColor = tile * (48 - dist) / 48;
     gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
 }
 
-bool oob(ivec3 coords, vec3 dir) {
-    vec3 bounds = textureSize(map, 0).xzy;
-    return (dir.x >= 0 && coords.x > bounds.x) || (dir.x < 0 && coords.x < 0) 
-        || (dir.y >= 0 && coords.y > bounds.y) || (dir.y < 0 && coords.y < 0)
-        || (dir.z >= 0 && coords.z > bounds.z) || (dir.z < 0 && coords.z < 0);
+void emptyColor() {
+    outColor = vec4(0);
+    gl_FragDepth = 1.0f;
+}
+
+bool oob() {
+    return (iRay.dir.x >= 0 && mapPos.x > bounds.x) || (iRay.dir.x < 0 && mapPos.x < 0) 
+        || (iRay.dir.y >= 0 && mapPos.y > bounds.y) || (iRay.dir.y < 0 && mapPos.y < 0)
+        || (iRay.dir.z >= 0 && mapPos.z > bounds.z) || (iRay.dir.z < 0 && mapPos.z < 0);
 }
 
 void main() {
-    // Set init variable for raycasting loop
-    ivec3 mapPos = ivec3(iRay.position);
-    vec3 deltaDist = 1 / abs(iRay.dir);
-    vec3 sideDist = (mapPos + vec3(1, 1, 1) - iRay.position) * deltaDist;
-    ivec3 tstep = ivec3(1, 1, 1);
+    if (oob()) {
+        emptyColor();
+        return;
+    }
+
+    sideDist = (mapPos + vec3(1, 1, 1) - iRay.position) * deltaDist;
+    tstep = ivec3(1, 1, 1);
     if (iRay.dir.x < 0) {
         tstep.x = -1;
         sideDist.x = (iRay.position.x - mapPos.x) * deltaDist.x;
@@ -47,7 +59,7 @@ void main() {
     // Raycasting loop - increment dist until reach
     float dist = 0;
     vec4 tile = vec4(0);
-    while (tile.a == 0 && dist <= iRay.zFar - iRay.zNear && !oob(mapPos, iRay.dir)) {
+    while (tile.a == 0 && dist <= iRay.zFar - iRay.zNear && !oob()) {
         float minDist = min(sideDist.x, min(sideDist.y, sideDist.z));
         if (minDist == sideDist.x) {
             dist = sideDist.x;
@@ -67,7 +79,6 @@ void main() {
     if (tile.a != 0) {
         onHit(dist, tile);
     } else {
-        outColor = vec4(0);
-        gl_FragDepth = 1.0f;
+        emptyColor();
     }
 }
