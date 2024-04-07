@@ -170,9 +170,12 @@ internal_func void onReceivedInput(RenderMessage msg, GameState &game) {
 		game.db.spriteIndex[i] = msg.v.meshCreated.meshID;
 		handles.pushRenderCommand(
 			{.tag = SET_MESH_TRANSFORM,
-			 .v = {.setMeshTransform = {.meshID = msg.v.meshCreated.meshID,
-										.transform = glm::translate(
-											Mat4(1), game.db.position[i])}}});
+			 .v = {
+				 .setMeshTransform = {
+					 .meshID = msg.v.meshCreated.meshID,
+					 .transform = glm::translate(Mat4(1), game.db.position[i]) *
+								  glm::rotate(Mat4(1), -glm::radians(90.0f),
+											  Vec3(0, 0, 1))}}});
 		game.loading--;
 	}
 }
