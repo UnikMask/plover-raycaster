@@ -1,5 +1,6 @@
 
 #include "plover/plover.h"
+#include <bitset>
 
 class EntityDatabase {
   public:
@@ -54,5 +55,7 @@ class GameState {
 	Vec2 pointerPosition;
 
 	// Management
+	u32 loading;
 	EntityDatabase db;
+	std::array<u32, 256> materials;
 };

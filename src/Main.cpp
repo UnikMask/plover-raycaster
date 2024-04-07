@@ -1,4 +1,5 @@
 #include "glm/common.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
 #include "plover-raycaster.h"
 #include "plover/plover.h"
@@ -38,6 +39,25 @@ internal_func void init(GameMemory *mem) {
 	state->camera.position = Vec3(3.5f, 15.5f, 3.5f);
 	state->cameraPitch = -0.54f, state->cameraYaw = 0.87;
 	state->buttonsPressed = 0;
+
+	// Create needed materials
+	handles.pushRenderCommand(
+		{.tag = CREATE_MATERIAL,
+		 .id = 0,
+		 .v = {.createMaterial = {.textureName = "stones_color.png",
+								  .normalName = "stones_nrm.png"}}});
+
+	// Set up object positions
+	state->loading = 10;
+	state->db.position[0] = Vec3(3, 2, 3);
+	state->db.position[1] = Vec3(3, 2, 6);
+	state->db.position[2] = Vec3(3, 2, 9);
+	state->db.position[3] = Vec3(6, 2, 3);
+	state->db.position[4] = Vec3(6, 2, 6);
+	state->db.position[5] = Vec3(6, 2, 9);
+	state->db.position[6] = Vec3(9, 2, 3);
+	state->db.position[7] = Vec3(9, 2, 6);
+	state->db.position[8] = Vec3(9, 2, 9);
 }
 
 // Handle an input message. Returns whether there was a message.
@@ -128,6 +148,34 @@ internal_func void drawUI(GameState *state) {
 	handles.UI_Rect(color, UVec2(1260, 10), UVec2(10, 700));
 	handles.UI_Rect(color, UVec2(10, 700), UVec2(1260, 10));
 }
+internal_func void onReceivedInput(RenderMessage msg, GameState &game) {
+	switch (msg.tag) {
+	case MATERIAL_CREATED:
+		game.materials[msg.cmdID] = msg.v.materialCreated.materialID;
+		if (msg.cmdID == 0) {
+			for (size_t i = 0; i < 9; i++) {
+				handles.pushRenderCommand(
+					{.tag = CREATE_MESH,
+					 .id = (u32)i,
+					 .v = {.createMesh = {
+							   .name = "artefact.obj",
+							   .materialID = msg.v.materialCreated.materialID,
+						   }}});
+			}
+		}
+		game.loading--;
+		break;
+	case MESH_CREATED:
+		u32 i = msg.cmdID;
+		game.db.spriteIndex[i] = msg.v.meshCreated.meshID;
+		handles.pushRenderCommand(
+			{.tag = SET_MESH_TRANSFORM,
+			 .v = {.setMeshTransform = {.meshID = msg.v.meshCreated.meshID,
+										.transform = glm::translate(
+											Mat4(1), game.db.position[i])}}});
+		game.loading--;
+	}
+}
 
 // Default loop on plover
 EXPORT int gameUpdateAndRender(Handles *_pHandles, GameMemory *mem) {
@@ -146,15 +194,22 @@ EXPORT int gameUpdateAndRender(Handles *_pHandles, GameMemory *mem) {
 	// Game loop
 	GameState *state = (GameState *)mem->persistentArena.base;
 
-	state->deltaTime = handles.getTime() - state->prevFrameTime;
-	handleInput(state);
-	state->prevFrameTime = handles.getTime();
-	handles.pushRenderCommand(
-		{.tag = SET_CAMERA, .v = {.setCamera = {.camera = state->camera}}});
+	while (handles.hasRenderMessage()) {
+		onReceivedInput(handles.popRenderMessage(), *state);
+	}
 
-	handles.UI_Clear();
+	if (!state->loading) {
+		state->deltaTime = handles.getTime() - state->prevFrameTime;
+		handleInput(state);
+		state->prevFrameTime = handles.getTime();
+		handles.pushRenderCommand(
+			{.tag = SET_CAMERA, .v = {.setCamera = {.camera = state->camera}}});
 
-	drawUI(state);
+		handles.UI_Clear();
 
+		drawUI(state);
+	} else {
+		std::cout << state->loading << std::endl;
+	}
 	return 0;
 }
