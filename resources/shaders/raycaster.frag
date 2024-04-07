@@ -20,7 +20,9 @@ vec3 deltaDist = 1 / abs(iRay.dir);
 
 void onHit(float dist, vec4 tile) {
     outColor = tile * (48 - dist) / 48;
-    gl_FragDepth = dist / (iRay.zFar - iRay.zNear);
+    float temp1 = (iRay.zFar + iRay.zNear) / (iRay.zFar - iRay.zNear);
+    float temp2 = -(iRay.zFar * iRay.zNear) / (iRay.zFar - iRay.zNear);
+    gl_FragDepth =  (dist * temp1 + temp2) / dist;
 }
 
 void emptyColor() {
@@ -70,8 +72,7 @@ void main() {
 
     // Get max distance
     lambda = (gt0 * bounds - iRay.position) / iRay.dir;
-    float maxDist = min(iRay.zFar - iRay.zNear, 
-                        min(lambda.x, min(lambda.y, lambda.z)));
+    float maxDist = min(iRay.zFar, min(lambda.x, min(lambda.y, lambda.z)));
 
     // Set side distance and step on xyz-axis per loop
     vec3 position = iRay.position + offset * iRay.dir;
@@ -83,17 +84,14 @@ void main() {
     float dist = offset;
     vec4 tile = texelFetch(map, mapPos.xzy, 0);
     while (tile.a == 0 && dist <= maxDist) {
-        float minDist = min(sideDist.x, min(sideDist.y, sideDist.z));
-        if (minDist == sideDist.x) {
-            dist = sideDist.x;
+        dist = min(sideDist.x, min(sideDist.y, sideDist.z));
+        if (dist == sideDist.x) {
             sideDist.x += deltaDist.x;
             mapPos.x += tstep.x;
-        } else if (minDist == sideDist.z) {
-            dist = sideDist.z;
+        } else if (dist == sideDist.z) {
             sideDist.z += deltaDist.z;
             mapPos.z += tstep.z;
         } else {
-            dist = sideDist.y;
             sideDist.y += deltaDist.y;
             mapPos.y += tstep.y;
         }
