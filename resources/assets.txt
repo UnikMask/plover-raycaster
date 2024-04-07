@@ -4,3 +4,6 @@ textures/floor.png
 textures/normal.jpg
 textures/sphere.png
 textures/wall.png
+textures/stones_color.png
+textures/stones_nrm.png
+models/artefact.obj
