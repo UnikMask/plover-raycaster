@@ -2,6 +2,7 @@
 #include "Mesh.h"
 #include "plover_int.h"
 
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <set>
@@ -1538,7 +1539,7 @@ void VulkanContext::updateUniformBuffer(uint32_t currentImage) {
 	// Global Uniform
 	GlobalUniform ubo{};
 	glm::mat4 view =
-		glm::lookAt(camera.position, camera.position - camera.direction,
+		glm::lookAt(camera.position, camera.position + camera.direction,
 					glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 proj = glm::perspective(
 		glm::radians(45.0f),								   // FOV
