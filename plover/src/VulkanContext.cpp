@@ -1541,15 +1541,19 @@ void VulkanContext::updateUniformBuffer(uint32_t currentImage) {
 	glm::mat4 view =
 		glm::lookAt(camera.position, camera.position + camera.direction,
 					glm::vec3(0.0f, 1.0f, 0.0f));
+	float ratio = swapChainExtent.width / (float)swapChainExtent.height;
+	Mat4 scaleFix = Mat4(1);
+	scaleFix[0][0] = 2.1;
+	scaleFix[1][1] = 2.1;
+	scaleFix[2][2] = 2.1;
 	glm::mat4 proj = glm::perspective(
 		glm::radians(45.0f),								   // FOV
 		swapChainExtent.width / (float)swapChainExtent.height, // Aspect ratio
 		0.1f,												   // Near clip
 		100.0f);											   // Far clip
-
 	proj[1][1] *= -1;
 
-	ubo.camera = proj * view;
+	ubo.camera = proj * scaleFix * view;
 	ubo.cameraPos = camera.position;
 
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
