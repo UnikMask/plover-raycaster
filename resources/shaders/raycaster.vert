@@ -26,9 +26,9 @@ layout (location = 0) out RayInfo {
 void main() {
     gl_Position = vec4(inPosition, 0, 1);
     float tanHalfFovy = tan(uRay.fov / 2);
-    oRay.dir = normalize(uRay.cameraDir 
-        - inDisplay.x * tanHalfFovy *  uRay.cameraLeft * uRay.aspectRatio 
-        + inDisplay.y * uRay.cameraUp * tanHalfFovy);
+    oRay.dir = uRay.cameraDir 
+        - inDisplay.x * tanHalfFovy * uRay.cameraLeft * uRay.aspectRatio 
+        + inDisplay.y * uRay.cameraUp * tanHalfFovy;
 
     oRay.position = uRay.cameraPos;
     oRay.zNear = uRay.zNear;
