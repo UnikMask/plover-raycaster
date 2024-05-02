@@ -1,11 +1,12 @@
 #include "UI.h"
 #include "VulkanContext.h"
 
-void createUIDescriptorSetLayout(VulkanContext& context) {
+void createUIDescriptorSetLayout(VulkanContext &context) {
 	VkDescriptorSetLayoutBinding layoutBindings[2];
 	layoutBindings[0] = {};
 	layoutBindings[0].binding = 0;
-	layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	layoutBindings[0].descriptorType =
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	layoutBindings[0].descriptorCount = 1;
 	layoutBindings[0].pImmutableSamplers = nullptr;
 	layoutBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -21,16 +22,14 @@ void createUIDescriptorSetLayout(VulkanContext& context) {
 	layoutInfo.bindingCount = 2;
 	layoutInfo.pBindings = layoutBindings;
 
-	if (vkCreateDescriptorSetLayout(
-			context.device,
-			&layoutInfo,
-			nullptr,
-			&context.uiDescriptorSetLayout) != VK_SUCCESS) {
+	if (vkCreateDescriptorSetLayout(context.device, &layoutInfo, nullptr,
+									&context.uiDescriptorSetLayout) !=
+		VK_SUCCESS) {
 		throw std::runtime_error("failed to create ui descriptor set layout!");
 	}
 }
 
-void UIContext::createDescriptorSets(VulkanContext& context) {
+void UIContext::createDescriptorSets(VulkanContext &context) {
 	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	quadSSBOsMapped.resize(MAX_FRAMES_IN_FLIGHT);
 	quadSSBOBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -45,21 +44,17 @@ void UIContext::createDescriptorSets(VulkanContext& context) {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		CreateBufferInfo quadSSBOInfo{};
 		quadSSBOInfo.size = quadSSBOSize;
-		quadSSBOInfo.usage =
-			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-		quadSSBOInfo.properties =
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		quadSSBOInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		quadSSBOInfo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+								  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 		quadSSBOInfo.vmaFlags = static_cast<VmaAllocationCreateFlagBits>(
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
 			VMA_ALLOCATION_CREATE_MAPPED_BIT);
-		context.createBuffer(quadSSBOInfo,
-							 quadSSBOBuffers[i],
+		context.createBuffer(quadSSBOInfo, quadSSBOBuffers[i],
 							 quadSSBOAllocations[i]);
 
 		VmaAllocationInfo quadSSBOAllocInfo{};
-		vmaGetAllocationInfo(context.allocator,
-							 quadSSBOAllocations[i],
+		vmaGetAllocationInfo(context.allocator, quadSSBOAllocations[i],
 							 &quadSSBOAllocInfo);
 		quadSSBOsMapped[i] = quadSSBOAllocInfo.pMappedData;
 	}
@@ -81,7 +76,8 @@ void UIContext::createDescriptorSets(VulkanContext& context) {
 		descriptorWrites[0].dstSet = descriptorSets[i];
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
-		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrites[0].descriptorType =
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		descriptorWrites[0].descriptorCount = 1;
 		descriptorWrites[0].pImageInfo = &imageInfo;
 
@@ -98,13 +94,13 @@ void UIContext::createDescriptorSets(VulkanContext& context) {
 	}
 }
 
-void createUIPipeline(VulkanContext& context) {
+void createUIPipeline(VulkanContext &context) {
 	PipelineCreateInfo createInfo{};
 	createInfo.useDepthBuffer = false;
 	createInfo.doCulling = true;
 	createInfo.subpass = 1; // UI Subpass
-	createInfo.vertexShaderPath = "../resources/spirv/ui_vert.spv";
-	createInfo.fragmentShaderPath = "../resources/spirv/ui_frag.spv";
+	createInfo.vertexShaderPath = "../resources/spirv/ui.vert.spv";
+	createInfo.fragmentShaderPath = "../resources/spirv/ui.frag.spv";
 	createInfo.descriptorSetLayoutCount = 1;
 	createInfo.pDescriptorSetLayouts = &context.uiDescriptorSetLayout;
 	createInfo.bindingDescriptionCount = 0;
@@ -112,46 +108,35 @@ void createUIPipeline(VulkanContext& context) {
 	createInfo.attributeDescriptionCount = 0;
 	createInfo.pAttributeDescriptions = nullptr;
 
-	context.createGraphicsPipeline(createInfo, context.uiPipeline, context.uiPipelineLayout);
+	context.createGraphicsPipeline(createInfo, context.uiPipeline,
+								   context.uiPipelineLayout);
 }
 
-
-void createUI(VulkanContext& context, UIContext *ui) {
+void createUI(VulkanContext &context, UIContext *ui) {
 	buildGlyphAtlas(&context, &ui->atlas);
 
 	ui->createDescriptorSets(context);
 }
 
-void UIContext::clear() {
-	quadsWritten = 0;
-}
+void UIContext::clear() { quadsWritten = 0; }
 
-void UIContext::writeRect(VulkanContext *context,
-						  Vec4 color,
-						  UVec2 pos,
+void UIContext::writeRect(VulkanContext *context, Vec4 color, UVec2 pos,
 						  UVec2 size) {
 	assert(quadsWritten < MAX_UI_QUADS);
 
 	UIQuad quad{};
 	quad.character = 255;
-	quad.pos = Vec2(
-		pos.x / (f32) WIDTH,
-		pos.y / (f32) HEIGHT) * 2.0f - 1.0f;
-	quad.size = Vec2(
-		size.x / (f32) WIDTH,
-		size.y / (f32) HEIGHT) * 2.0f;
+	quad.pos = Vec2(pos.x / (f32)WIDTH, pos.y / (f32)HEIGHT) * 2.0f - 1.0f;
+	quad.size = Vec2(size.x / (f32)WIDTH, size.y / (f32)HEIGHT) * 2.0f;
 	quad.color = color;
 
-	memcpy((UIQuad*) quadSSBOsMapped[context->currentFrame] + quadsWritten,
-		   &quad,
-		   sizeof(UIQuad));
+	memcpy((UIQuad *)quadSSBOsMapped[context->currentFrame] + quadsWritten,
+		   &quad, sizeof(UIQuad));
 
 	quadsWritten++;
 }
 
-void UIContext::writeText(VulkanContext *context,
-						  char *text,
-						  Vec2 pos,
+void UIContext::writeText(VulkanContext *context, char *text, Vec2 pos,
 						  Vec4 color) {
 	assert(quadsWritten < MAX_UI_QUADS);
 
@@ -176,17 +161,17 @@ void UIContext::writeText(VulkanContext *context,
 
 		UIQuad quad{};
 		quad.character = charIdx;
-		quad.pos = Vec2(
-			(xOffset + pos.x - kerning_x) / (f32) WIDTH,
-			pos.y / (f32) HEIGHT) * 2.0f - 1.0f;
-		quad.size = Vec2(
-			atlas.charQuadWidth / (f32) WIDTH,
-			atlas.charQuadHeight / (f32) HEIGHT) * 2.0f;
+		quad.pos = Vec2((xOffset + pos.x - kerning_x) / (f32)WIDTH,
+						pos.y / (f32)HEIGHT) *
+					   2.0f -
+				   1.0f;
+		quad.size = Vec2(atlas.charQuadWidth / (f32)WIDTH,
+						 atlas.charQuadHeight / (f32)HEIGHT) *
+					2.0f;
 		quad.color = color;
 
-		memcpy((UIQuad*) quadSSBOsMapped[context->currentFrame] + quadsWritten,
-		   &quad,
-		   sizeof(UIQuad));
+		memcpy((UIQuad *)quadSSBOsMapped[context->currentFrame] + quadsWritten,
+			   &quad, sizeof(UIQuad));
 
 		xOffset += charData.xAdvance;
 		idx++;
@@ -196,12 +181,12 @@ void UIContext::writeText(VulkanContext *context,
 
 void UIContext::cleanup(VulkanContext *context) {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vmaDestroyBuffer(context->allocator,
-						 quadSSBOBuffers[i],
+		vmaDestroyBuffer(context->allocator, quadSSBOBuffers[i],
 						 quadSSBOAllocations[i]);
 	}
 
 	vkDestroySampler(context->device, atlas.texture.sampler, nullptr);
 	vkDestroyImageView(context->device, atlas.texture.imageView, nullptr);
-	vmaDestroyImage(context->allocator, atlas.texture.image, atlas.texture.allocation);
+	vmaDestroyImage(context->allocator, atlas.texture.image,
+					atlas.texture.allocation);
 }

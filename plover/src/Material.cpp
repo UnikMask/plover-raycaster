@@ -96,8 +96,8 @@ size_t createMaterial(VulkanContext& context,
 	createInfo.doCulling = true;
 	createInfo.wireframeMode = false;
 	createInfo.subpass = 0; // Forward Rendering Subpass
-	createInfo.vertexShaderPath = "../resources/spirv/vert.spv";
-	createInfo.fragmentShaderPath = "../resources/spirv/frag.spv";
+	createInfo.vertexShaderPath = "../resources/spirv/shader.vert.spv";
+	createInfo.fragmentShaderPath = "../resources/spirv/shader.frag.spv";
 	createInfo.descriptorSetLayoutCount = 3;
 	createInfo.pDescriptorSetLayouts = descriptorSetLayouts;
 	createInfo.bindingDescriptionCount = 1;

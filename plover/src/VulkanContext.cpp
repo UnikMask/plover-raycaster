@@ -1033,8 +1033,8 @@ void VulkanContext::createWireframePipeline() {
 	pipelineInfo.doCulling = false;
 	pipelineInfo.wireframeMode = true;
 	pipelineInfo.subpass = 0; // Forward Rendering Subpass
-	pipelineInfo.vertexShaderPath = "../resources/spirv/wireframe_vert.spv";
-	pipelineInfo.fragmentShaderPath = "../resources/spirv/wireframe_frag.spv";
+	pipelineInfo.vertexShaderPath = "../resources/spirv/wireframe.vert.spv";
+	pipelineInfo.fragmentShaderPath = "../resources/spirv/wireframe.frag.spv";
 	pipelineInfo.descriptorSetLayoutCount = 2;
 	pipelineInfo.pDescriptorSetLayouts = descriptorSetLayouts;
 	pipelineInfo.bindingDescriptionCount = 1;
